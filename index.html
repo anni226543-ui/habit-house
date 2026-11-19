@@ -957,7 +957,7 @@ function relKey(a,b){return a<b?a+'|'+b:b+'|'+a;}
 function houseDay(){return Math.floor(gameMin/1440);}
 function relGet(a,b){const k=relKey(a,b);let r=state.rel[k];if(!r){r=state.rel[k]={aff:8,stage:0,since:houseDay(),chem:+((hashStr(k)%1000)/1000).toFixed(3)};}return r;}
 function partnerOf(id){for(const k in state.rel){const r=state.rel[k];if(r.stage>=4){const[a,b]=k.split('|');if(a===id&&habitById(b))return b;if(b===id&&habitById(a))return a;}}return null;}
-function stageName(r){if(r.stage===3&&r.aff>=88&&r.chem<.4)return '摯友';if(r.stage<=2&&r.aff<6&&r.stage>0)return '不合';return STAGES[r.stage];}
+function stageName(r){if(r.ex&&r.stage<=3)return exLabel(r);if(r.stage===3&&r.aff>=88&&r.chem<.4)return '摯友';if(r.stage<=2&&r.aff<6&&r.stage>0)return '不合';return STAGES[r.stage];}
 let relDirty=false;
 
 /* =========================================================
@@ -1741,7 +1741,7 @@ function pairSpots(stage,f){
 }
 function tryInvite(r,forceP,forceTxt){
   const me=habitById(r.id);
-  const cands=forceP?[forceP]:RES.filter(x=>x!==r&&canJoin(x)&&Math.abs(x.f-r.f)<=1);if(!cands.length)return false;
+  const cands=forceP?[forceP]:RES.filter(x=>x!==r&&canJoin(x)&&Math.abs(x.f-r.f)<=1&&relGet(r.id,x.id).ex!=='bitter');if(!cands.length)return false;
   const ws=cands.map(x=>{const rel=relGet(r.id,x.id);const c=compat(me,habitById(x.id));return Math.max(1,rel.aff+10+(rel.stage>=4?60:0)+c*15-(x.f!==r.f?20:0));});
   let v=Math.random()*ws.reduce((a,b)=>a+b,0),p=cands[0];for(let i=0;i<cands.length;i++){v-=ws[i];if(v<=0){p=cands[i];break;}}
   const rel=relGet(r.id,p.id);const opts=pairSpots(rel.stage,r.f);useFloor(r.f);if(!opts.length)return false;
@@ -1764,13 +1764,24 @@ function socialTick(dtR,dtG){
     if(Math.abs(a.tx-b.tx)+Math.abs(a.ty-b.ty)>3||a.room!==b.room)continue;
     const ha=habitById(a.id),hb=habitById(b.id);if(!isActive(ha)||!isActive(hb))continue;
     const rel=relGet(a.id,b.id);const cp=compat(ha,hb);const grumpy=a.needs.mood<25||b.needs.mood<25;
-    const rate=grumpy?-.02:(.035+.02*cp+(a.step&&a.step.pair?.03:0));
+    if(rel.ex==='bitter'){rel.aff=clamp(rel.aff-.01*dtG,0,100);for(const x of[a,b]){x.needs.mood=clamp(x.needs.mood-.06*dtG,0,100);
+        if(x.step&&!x.step.essential&&!x.step.party&&!x.step.kid&&x.timer>4){x.timer=4;showBub(x,'angry',2);if(Math.random()<.3)log(x.name+' 看到 '+(x===a?b:a).name+' 就臭著臉離開了');}}continue;}
+    const rate=grumpy?-.02:(.035+.02*cp+(a.step&&a.step.pair?.03:0)+(rel.ex==='peace'?-.01:0));
     rel.aff=clamp(rel.aff+rate*dtG,0,100);relDirty=true;
     a.buddy=b;b.buddy=a;const m=cp<0?.02:.08;a.needs.mood=clamp(a.needs.mood+m*dtG,0,100);b.needs.mood=clamp(b.needs.mood+m*dtG,0,100);}
   for(const r of RES){if(!r.buddy)continue;r.pairT-=dtR;if(r.pairT<=0){r.pairT=rand(2.2,4.5);const rel=relGet(r.id,r.buddy.id);const cp=compat(habitById(r.id),habitById(r.buddy.id));
       const pool=rel.stage>=4?['heart','heart','smile','spark','note']:cp<0||rel.aff<15?['dots','q','meh','angry']:['chat','smile','note','star','food','q','heart'];showBub(r,choice(pool),1.8);}}
 }
 let lastRelHour=-1,lastHouseDay=-1;
+function breakUp(a,b,mode){const rel=relGet(a,b);const was=rel.stage;const A=nameOf(a),B=nameOf(b);const day=houseDay();
+  rel.wasMarried=rel.wasMarried||was===7;rel.ex=mode;rel.exSince=day;rel.since=day;rel.ask=null;rel.crisis=false;rel.asked4=false;rel.asked5=false;rel.ring=false;
+  if(rel.home){rel.home=null;rebuildHome();}
+  const kids=state.babies.some(k=>k.parents.includes(a)&&k.parents.includes(b));let msg;
+  if(mode==='peace'){rel.stage=2;rel.aff=Math.max(rel.aff,45);moodAdd(a,-12);moodAdd(b,-12);msg=A+' 和 '+B+(was===7?' 和平離婚了':' 和平分手了')+'，說好以後還是朋友'+(kids?'，也會一起照顧孩子':'');}
+  else{rel.stage=1;rel.aff=Math.min(rel.aff,8);moodAdd(a,-30);moodAdd(b,-30);for(const id of[a,b]){const r=R_(id);if(r){r.emo='angry';r.emoT=5;showBub(r,'angry',3);}}
+    msg=A+' 和 '+B+(was===7?' 吵到離婚了':' 大吵一架後分手了')+'，現在誰也不想理誰…'+(kids?'孩子夾在中間好可憐':'');}
+  log('💔 '+msg);toast('💔 '+msg,true);relDirty=true;saveSoon();return msg;}
+function exLabel(r){if(!r.ex)return null;const w=r.wasMarried;return r.ex==='peace'?(w?'前配偶・好聚好散':'前任・和平分手'):(w?'前配偶・鬧翻':'前任・鬧翻');}
 function relTick(){
   const day=houseDay();
   for(const k in state.rel){const rel=state.rel[k];const[a,b]=k.split('|');const ha=habitById(a),hb=habitById(b);if(!ha||!hb)continue;if(!isActive(ha)||!isActive(hb))continue;
@@ -1782,7 +1793,7 @@ function relTick(){
     if(rel.stage===0&&rel.aff>=12)up(1,A+' 和 '+B+' 熟起來了');
     else if(rel.stage===1&&rel.aff>=30&&days>=1)up(2,A+' 和 '+B+' 變成朋友了');
     else if(rel.stage===2&&rel.aff>=50&&days>=2)up(3,A+' 和 '+B+' 成為好朋友');
-    else if(rel.stage===3&&chem>=.4&&rel.aff>=62&&days>=3&&free&&!rel.family&&!isFamily(a,b))up(4,A+' 和 '+B+' 之間好像有點曖昧…',true);
+    else if(rel.stage===3&&chem>=.4&&rel.aff>=62&&days>=3&&free&&!rel.family&&!isFamily(a,b)&&(!rel.ex||(rel.ex==='peace'&&day-rel.exSince>=28)))up(4,A+' 和 '+B+' 之間好像有點曖昧…',true);
     else if(rel.stage===4&&rel.aff>=74&&days>=5&&free&&!rel.ask){
       if(!rel.asked4&&Math.random()<.65){rel.asked4=true;const[x,y]=bold();rel.ask='confess';const hx=habitById(x);
         sendLetter('confess',x,tone(hx,'我…我好像喜歡上 '+nameOf(y)+' 了。要不要鼓起勇氣告白呢？'),['勇敢去告白吧！','再多觀察一下','我覺得你們不太適合'],{b:y},1);}
@@ -1794,8 +1805,9 @@ function relTick(){
       else up(6,A+' 向 '+B+' 求婚，'+B+' 答應了！',true);}
     else if(rel.stage===6&&days>=14)up(7,A+' 和 '+B+' 結婚了！全家一起祝福他們',true);
     else if(rel.stage>=5&&rel.aff<40&&!rel.crisis&&!rel.ask){rel.crisis=true;rel.ask='crisis';const[x,y]=Math.random()<.5?[a,b]:[b,a];
-      sendLetter('crisis',x,tone(habitById(x),'我跟 '+nameOf(y)+' 最近一直吵架…我們是不是走不下去了？'),['好好坐下來談一談','給彼此一點空間','分開也許比較好'],{b:y},1);}
-    else if(rel.stage>=5&&rel.aff<28){const was=rel.stage;rel.stage=2;rel.since=day;rel.aff=Math.max(0,rel.aff-10);if(rel.home){rel.home=null;rebuildHome();}const m=A+' 和 '+B+(was===7?' 離婚了…':' 分手了…');log(m);toast(m);saveSoon();}
+      sendLetter('crisis',x,tone(habitById(x),'我跟 '+nameOf(y)+' 最近一直吵架…我們是不是走不下去了？'),['好好坐下來談一談','給彼此一點空間',relGet(x,y).stage===7?'好聚好散，和平離婚吧':'好聚好散，和平分手吧'],{b:y},1);}
+    else if(rel.stage>=5&&rel.aff<28){const Pa=persOf(ha),Pb=persOf(hb);const pb=clamp(.3+(Pa.temper+Pb.temper)*.35-compat(ha,hb)*.1+(rel.aff<15?.3:0),.1,.9);breakUp(a,b,Math.random()<pb?'bitter':'peace');}
+    else if(rel.ex==='bitter'&&rel.aff>=40&&day-rel.exSince>=14){rel.ex='peace';log('🤝 '+A+' 和 '+B+' 終於放下過去，和解了');}
     else if(rel.stage===4&&rel.aff<50){rel.stage=3;rel.since=day;}
     else if(rel.stage>=2&&rel.stage<=3&&rel.aff<20){rel.stage=1;rel.since=day;log(A+' 和 '+B+' 最近關係變差了');}
   }
@@ -1836,7 +1848,7 @@ function pairEvent(){
   const act=RES.filter(r=>{const h=habitById(r.id);return h&&isActive(h)&&r.state!=='stairs'&&r.state!=='away'&&!(r.step&&r.step.sleep&&r.state==='act');});if(act.length<2)return;
   const a=choice(act);let others=act.filter(x=>x!==a&&x.f===a.f);if(!others.length||Math.random()<.25)others=act.filter(x=>x!==a);const b=choice(others);
   const ha=habitById(a.id),hb=habitById(b.id);const rel=relGet(a.id,b.id);const cp=compat(ha,hb);const Pa=persOf(ha),Pb=persOf(hb);
-  const pGood=clamp(.55+.18*cp+(rel.aff-40)/200-(Pa.temper+Pb.temper)*.25,.08,.92);
+  const pGood=clamp(.55+.18*cp+(rel.aff-40)/200-(Pa.temper+Pb.temper)*.25-(rel.ex==='bitter'?.4:0)+(rel.ex==='peace'?.1:0),.05,.92);
   const fillT=s=>s.replace(/\{A\}/g,a.name).replace(/\{B\}/g,b.name).replace('{HA}',ha.name).replace('{HB}',hb.name);
   if(Math.random()<pGood){const msg=fillT(choice(GOOD_EV));rel.aff=clamp(rel.aff+6,0,100);a.needs.mood=clamp(a.needs.mood+6,0,100);b.needs.mood=clamp(b.needs.mood+8,0,100);
     showBub(a,'heart',3);showBub(b,'heart',3);setPemo(a,'happy',8);setPemo(b,'love',8);log('♥ '+msg);toast(msg);}
@@ -2035,6 +2047,7 @@ function upgradeBed(ownerId){const h=habitById(ownerId);if(!h)return false;const
 function setHome(a,b,owner){const rel=relGet(a,b);rel.home=owner;rebuildHome();const ok=upgradeBed(owner);rebuild();
   const mover=owner===a?b:a;return nameOf(mover)+' 搬進了 '+nameOf(owner)+' 的房間，兩人正式同居了！'+(ok?'房間換上了雙人床（原本的床收進倉庫）。':'房間太擠放不下雙人床，暫時各睡各的床。');}
 function setStage(a,b,s,msg,big){const rel=relGet(a,b);rel.stage=s;rel.since=houseDay();relDirty=true;if(msg){log(msg);toast(msg,big);}celebratePair(a,b,big);
+  if(s===5&&rel.ex){const m0='💞 '+nameOf(a)+' 和 '+nameOf(b)+' 復合了！';log(m0);toast(m0,true);rel.ex=null;}
   if(s===5){statAdd('couples');addPhoto('love',nameOf(a)+' 和 '+nameOf(b)+' 開始交往',[a,b]);}
   if(s===7){statAdd('weddings');addPhoto('wedding',nameOf(a)+' 和 '+nameOf(b)+' 的婚禮',[a,b]);afterWedding(a,b);}if(s<7&&rel.home){rel.home=null;rebuildHome();}saveSoon();}
 function afterWedding(a,b){const A=nameOf(a),B=nameOf(b);
@@ -2106,7 +2119,7 @@ const LETTERS={
   crisis:{major:1,run(L,i){const a=L.from,b=L.data.b;if(!habitById(b))return '';const rel=relGet(a,b);const A=nameOf(a),B=nameOf(b);
     if(i===0){rel.aff=clamp(rel.aff+18,0,100);return A+' 和 '+B+' 好好談過之後，感情又回溫了';}
     if(i===1){rel.aff=clamp(rel.aff+6,0,100);return A+' 和 '+B+' 決定給彼此一點空間';}
-    rel.stage=2;rel.since=houseDay();rel.aff=Math.max(0,rel.aff-10);if(rel.home){rel.home=null;rebuildHome();}moodAdd(a,-20);moodAdd(b,-20);return A+' 和 '+B+' 和平分手了…';}},
+    const pers=persOf(habitById(a)).temper+persOf(habitById(b)).temper;return breakUp(a,b,Math.random()<pers*.25?'bitter':'peace');}},
   chat:{run(L,i){moodAdd(L.from,6);favAdd(L.from,2);return '';}},
   note:{run(L,i){favAdd(L.from,1);return '';}}
 };
@@ -2530,7 +2543,7 @@ function notifyCheck(){try{if(!SET.notify||!('Notification' in window)||Notifica
    ========================================================= */
 function roomOfHabit(h){const f=floorOfSlot(h.slot),i=h.slot%PER_FLOOR;return{f,x:7*i,y:8,w:7,h:5};}
 function inHabitRoom(p,h){const R=roomOfHabit(h);return(p.f||0)===R.f&&p.tx>=R.x&&p.tx<R.x+R.w&&p.ty>=R.y&&p.ty<R.y+R.h;}
-function familyHome(b){const ps=b.parents.map(habitById).filter(Boolean);if(!ps.length)return null;const ho=HOMEOWN[ps[0].id];return habitById(ho)||ps.find(h=>h.gender==='f')||ps[0];}
+function familyHome(b){b=b&&b.b?b.b:b;if(!b||!Array.isArray(b.parents))return null;const ps=b.parents.map(habitById).filter(Boolean);if(!ps.length)return null;const ho=HOMEOWN[ps[0].id];return habitById(ho)||ps.find(h=>h.gender==='f')||ps[0];}
 function cribMap(){const m=new Map();const free=state.placed.filter(p=>p.id==='crib');
   for(const b of state.babies){if(kidStage(b)>1)continue;const home=familyHome(b);let k=home?free.findIndex(p=>inHabitRoom(p,home)):-1;if(k<0)k=free.findIndex(p=>b.parents.some(id=>habitById(id)&&inHabitRoom(p,habitById(id))));if(k<0)k=0;
     if(free[k]){m.set(b.id,free[k]);free.splice(k,1);}}return m;}
@@ -2540,7 +2553,7 @@ function needCrib(extra){return cribCount()<smallKids()+(extra||0);}
 function freeTileNear(f,x0,y0,rad){const w=WORLDS[f];if(!w)return null;const Lw=w.L,bl=w.blocked;const used=new Set(w.SP.map(s=>s.tx+','+s.ty));
   for(let r=0;r<=(rad||3);r++)for(let dy=-r;dy<=r;dy++)for(let dx=-r;dx<=r;dx++){if(Math.max(Math.abs(dx),Math.abs(dy))!==r)continue;const x=x0+dx,y=y0+dy;
     if(x<0||y<0||x>=Lw.W||y>=Lw.D||Lw.cell[y][x]<0||bl[y][x]||used.has(x+','+y)||Lw.doorTiles.has(x+','+y))continue;return[x,y];}return null;}
-function kidBed(b){const c=cribMap().get(b.id);if(c)return{f:c.f||0,tx:c.tx,ty:c.ty,crib:true};
+function kidBed(b){b=b&&b.b?b.b:b;const c=cribMap().get(b.id);if(c)return{f:c.f||0,tx:c.tx,ty:c.ty,crib:true};
   const home=familyHome(b);if(!home)return{f:0,tx:12,ty:7,crib:false};const R=roomOfHabit(home);const t=freeTileNear(R.f,R.x+1,R.y+3,3)||[R.x+1,R.y+3];return{f:R.f,tx:t[0],ty:t[1],crib:false};}
 function caretaker(b){const home=r=>r.state!=='away'&&!(r.step&&r.step.party)&&!(r.sick>gameMin);
   const ps=RES.filter(r=>b.b.parents.includes(r.id)&&home(r));if(ps.length)return ps.find(r=>!(r.state==='act'&&r.step&&r.step.sleep))||ps[0];
