@@ -632,6 +632,9 @@ const CAT={
       {fp:[1,1,2,2],h:14,draw:P=>chairP(P,16,16,'in','#4a4f5a','#5d6b8a')},{fp:[1,1.8,2,2],h:22,draw:P=>chairBackP(P,16,16,'#4a4f5a')}]},
   guitar:{name:'吉他',cat:'room',price:50,w:1,d:1,h:24,does:'彈吉他唱歌',spots:[{du:0,dv:1,kind:'guitar',pose:'stand',face:'out'}],
     draw:(P,t,o)=>{P.top(1,3,11,5,11,'#444');if(o.busy())return;P.box(4,6,1,7,3,9,'#c56a2d');P.front(9,7,9,4,6,'#3a2210');P.box(7,7,10,2,1,11,'#6b4423');P.box(6,7,21,4,1,3,'#3a2210');}},
+  crib:{name:'嬰兒床',cat:'room',price:80,w:1,d:1,h:22,does:'寶寶睡覺的地方（生寶寶前要先準備）',draw:(P,t,o)=>{const w='#f4e3c3',d='#c9a77c';P.sh(1,1,14,14);P.box(1,1,0,14,14,4,d);P.box(2,2,4,12,12,3,'#ffffff');P.box(3,3,7,10,6,1,'#9fd0f5');
+    for(const[a,b]of[[1,1],[13,1],[1,13],[13,13]])P.box(a,b,0,2,2,18,w);P.box(1,1,16,14,2,2,w);P.box(1,13,16,14,2,2,w);P.box(1,3,16,2,10,2,w);P.box(13,3,16,2,10,2,w);
+    for(let k=4;k<13;k+=3){P.box(k,13,6,1,1,10,w);P.box(13,k,6,1,1,10,w);}P.box(7,7,24,2,2,1,'#f4b41a');P.box(5,7,22,1,1,2,'#f59ac0');P.box(10,7,22,1,1,2,'#7fc8f0');}},
   plush:{name:'娃娃',cat:'room',price:25,w:1,d:1,h:18,does:'抱著娃娃發呆',spots:[{du:0,dv:1,kind:'plush',pose:'floor',face:'in'}],
     draw:(P,t,o)=>{P.sh(3,3,10,10);P.box(3,3,0,10,10,3,'#f3a6c0');if(o.busy())return;const b='#b07a4e';P.box(5,5,3,6,5,6,b);P.box(4,7,5,2,2,3,b);P.box(10,7,5,2,2,3,b);
       P.box(5,6,9,6,5,5,S(b,1.1));P.box(5,7,14,2,2,2,b);P.box(9,7,14,2,2,2,b);P.front(11,7,9,10,12,'#ecd2a8');P.front(11,6,7,12,13,'#2a2233');P.front(11,9,10,12,13,'#2a2233');P.box(7,10,6,2,1,1,'#e43b44');}},
@@ -703,7 +706,7 @@ const CAT={
   painting:{name:'掛畫',cat:'deco',price:30,wall:true,does:'掛在高牆上（窗戶以外的位置）'},
   curtain:{name:'窗簾',cat:'deco',price:25,wall:true,does:'掛在窗戶上'}
 };
-const CAT_ORDER={room:['bed','dbed','princess','wardrobe','desk','tv','ps5','bookshelf','guitar','plush','nightlight','easel','fitness','aquarium','beanbag','vanity','piano'],
+const CAT_ORDER={room:['bed','dbed','crib','princess','wardrobe','desk','tv','ps5','bookshelf','guitar','plush','nightlight','easel','fitness','aquarium','beanbag','vanity','piano'],
   public:['coffee','oven','treadmill','massage','projector','karaoke','boardgame'],deco:['rug','plant','bigplant','floorlamp','painting','curtain','xmas']};
 const GIFTS={flower:{name:'花束',price:10},choco:{name:'巧克力',price:8},cake:{name:'小蛋糕',price:15},teddy:{name:'泰迪熊',price:20},novel:{name:'小說',price:12},
   gamecard:{name:'遊戲片',price:25},perfume:{name:'香水',price:30},headphones:{name:'耳機',price:35},sneakers:{name:'球鞋',price:40},ring:{name:'戒指',price:99}};
@@ -722,7 +725,7 @@ const SIGS=[
 function sigOf(name){for(const s of SIGS)if(s.re.test(name||''))return s;return null;}
 const SUGGEST=['喝水','閱讀 20 分鐘','運動 30 分鐘','背 10 個單字','冥想 10 分鐘','練吉他','早睡早起','寫日記','記帳'];
 // default positions inside a bedroom (local tile, rotation)
-const ROOMPOS={bed:[5,2,0],dbed:[4,2,0],princess:[5,2,0],wardrobe:[0,0,0],bookshelf:[1,0,0],ps5:[2,0,0],tv:[1,0,0],desk:[4,0,0],aquarium:[6,0,0],guitar:[0,2,1],easel:[0,3,1],fitness:[2,4,0],plant:[0,4,1],
+const ROOMPOS={bed:[5,2,0],dbed:[4,2,0],crib:[3,4,0],princess:[5,2,0],wardrobe:[0,0,0],bookshelf:[1,0,0],ps5:[2,0,0],tv:[1,0,0],desk:[4,0,0],aquarium:[6,0,0],guitar:[0,2,1],easel:[0,3,1],fitness:[2,4,0],plant:[0,4,1],
   floorlamp:[4,4,0],nightlight:[4,4,0],rug:[1,2,0],plush:[2,0,0],beanbag:[3,2,0],vanity:[2,0,0]};
 
 /* =========================================================
@@ -1459,10 +1462,10 @@ function buildSprite(look,pose,dir,frame,prop,eyes,gray,flags){
 function outlined(raw,col){const W=raw.width,H=raw.height;const sil=document.createElement('canvas');sil.width=W;sil.height=H;const s=sil.getContext('2d');
   s.drawImage(raw,0,0);s.globalCompositeOperation='source-in';s.fillStyle=col||OUT;s.fillRect(0,0,W,H);
   const out=document.createElement('canvas');out.width=W;out.height=H;const o=out.getContext('2d');o.drawImage(sil,-1,0);o.drawImage(sil,1,0);o.drawImage(sil,0,-1);o.drawImage(sil,0,1);o.drawImage(raw,0,0);return out;}
-function babySprite(look,frame){
-  const key='baby|'+look.skin+look.hair+look.shirt+frame;let c=SPR.get(key);if(c)return c;
+function babySprite(look,frame,closed){
+  const key='baby|'+look.skin+look.hair+look.shirt+frame+(closed?'c':'');let c=SPR.get(key);if(c)return c;
   const raw=document.createElement('canvas');raw.width=16;raw.height=16;const x=raw.getContext('2d');const p=(a,b,w,h,col)=>{x.fillStyle=col;x.fillRect(4+a,4+b,w,h);};
-  p(0,0,7,5,look.skin);p(2,-1,3,1,look.hair);p(3,-2,1,1,look.hair);p(1,2,1,1,'#2b2230');p(5,2,1,1,'#2b2230');p(0,3,1,1,'#f29a9a');p(6,3,1,1,'#f29a9a');
+  p(0,0,7,5,look.skin);p(2,-1,3,1,look.hair);p(3,-2,1,1,look.hair);if(closed){p(1,2,2,1,'#2b2230');p(4,2,2,1,'#2b2230');}else{p(1,2,1,1,'#2b2230');p(5,2,1,1,'#2b2230');}p(0,3,1,1,'#f29a9a');p(6,3,1,1,'#f29a9a');
   p(1,5,6,3,look.shirt);p(frame?0:6,7,1,2,look.skin);p(frame?6:0,8,1,1,look.skin);p(2,8,1,1,look.skin);p(4,8,1,1,look.skin);
   c=outlined(raw);SPR.set(key,c);return c;}
 
@@ -1566,7 +1569,7 @@ function syncResidents(){
   syncBabies();syncPets();useFloor(viewFloor);
 }
 function syncBabies(){const old=new Map(BABIES.map(b=>[b.id,b]));BABIES=state.babies.map(b=>{const o=old.get(b.id);if(o){o.b=b;return o;}
-  const tx=12,ty=7;return{id:b.id,b,tx,ty,px:(tx+.5)*T,py:(ty+.5)*T,path:[],wait:rand(1,4),walkT:0,bub:null,bubT:0};});}
+  const tx=12,ty=7;return{id:b.id,b,f:0,tx,ty,px:(tx+.5)*T,py:(ty+.5)*T,path:[],wait:rand(1,4),walkT:0,bub:null,bubT:0};});}
 function bfs(sx,sy,gx,gy){
   if(sx===gx&&sy===gy)return[];
   const W=L.W,D=L.D,prev=new Int32Array(W*D).fill(-1);const q=[sy*W+sx];prev[sy*W+sx]=sy*W+sx;const dirs=[[1,0],[-1,0],[0,1],[0,-1]];let qi=0;
@@ -1663,11 +1666,12 @@ function decide(r){
   o.push(['invite',RES.length>1?(.8+P.social*3):0]);
   const wx=weatherNow();if((h.money||0)>=40&&hr>=10&&hr<19&&wx!=='typhoon')o.push(['outing',(weekday()>=5?1.4:.5)*Math.min(2.2,P.spend)*(.5+P.social)*(wet()||wx==='snow'?.25:1)]);
   if(hr>=7&&hr<18&&!wet()&&wx!=='snow'&&gardenNeed()>=0)o.push(['garden',(plotState(gardenArr()[gardenNeed()])==='grow'?2.5:5)*(P.has('helpful')||P.has('gentle')||P.has('early')?2:1)]);
+  {const kid=BABIES.length?kidToCare(r):null;if(kid)o.push(['babycare',Math.min(14,(75-(kid.b.care==null?80:kid.b.care))/6+1)*(kid.b.parents.includes(r.id)?2:1)]);}
   if(petsArr().some(p=>(p.hunger||0)<55&&!(p.away>gameMin))&&hasKind('petbowl',r))o.push(['feedpet',2.2*(P.has('gentle')||P.has('helpful')?2:1)]);
   const dog=petsArr().find(p=>p.kind==='dog'&&p.walked!==houseDay()&&!(p.away>gameMin));if(dog&&hr>=7&&hr<20&&!wet()&&wx!=='typhoon')o.push(['walkdog',1.4*(P.has('sporty')?2:1)]);
   if(P.has('sporty')){for(const x of o)if(x[0]==='fit'||x[0]==='run')x[1]*=2.5;}if(P.has('otaku')){for(const x of o)if(x[0]==='game'||x[0]==='roomtv')x[1]*=2.5;}
   for(let k=0;k<4;k++){const tot=o.reduce((s,x)=>s+x[1],0);let v=Math.random()*tot,a=o[0][0];for(const[aa,w]of o){v-=w;if(v<=0){a=aa;break;}}
-    if(a==='invite'){if(tryInvite(r))return;continue;}if(a==='outing'){if(startOuting(r,h))return;continue;}if(a==='garden'){const gi=gardenNeed();if(gi>=0&&startGarden(r,gi))return;continue;}
+    if(a==='invite'){if(tryInvite(r))return;continue;}if(a==='outing'){if(startOuting(r,h))return;continue;}if(a==='babycare'){const kid=kidToCare(r);if(kid&&startBabycare(r,kid))return;continue;}if(a==='garden'){const gi=gardenNeed();if(gi>=0&&startGarden(r,gi))return;continue;}
     if(a==='walkdog'){const d=petsArr().find(p=>p.kind==='dog'&&p.walked!==houseDay()&&!(p.away>gameMin));if(d){d.walked=houseDay();r.plan=[st('exit',1,{txt:'帶'+d.name+'去散步',essential:true,leave:{kind:'walk',pet:d.id,until:gameMin+rand(40,70),txt:'帶'+d.name+'散步'}})];r.planAct='walkdog';r.tries=0;nextStep(r);return;}continue;}if(startPlan(r,a))return;}
   r.wait=4;r.doing='在走廊晃晃';
 }
@@ -1714,6 +1718,7 @@ function finishStep(r){
   if(s&&s.bake){log(r.name+' 烤了一盤餅乾分給大家');for(const o of RES)if(o!==r&&o.f===r.f){o.needs.mood=clamp(o.needs.mood+6,0,100);showBub(o,'cookie',2.5);relGet(r.id,o.id).aff+=2;}}
   if(s&&s.pair&&s.with){const rel=relGet(r.id,s.with);rel.aff=clamp(rel.aff+1.5,0,100);relDirty=true;}
   if(s&&s.work){const h=habitById(r.id);if(h)paySalary(r,h,s.late);}
+  if(s&&s.kid)careDone(r,s);
   if(s&&s.feedPet){const p=petsArr().filter(x=>!(x.away>gameMin)).sort((a,b)=>(a.hunger||0)-(b.hunger||0))[0];if(p){p.hunger=100;const pt=PETS.find(x=>x.id===p.id);if(pt&&r.spot){useFloor(0);const path=bfs(pt.tx,pt.ty,r.spot.tx,r.spot.ty);if(path)pt.path=path;pt.bub='heart';pt.bubT=3;}if(Math.random()<.5)log(r.name+' 餵'+p.name+'吃飯');}}
   nextStep(r);
 }
@@ -1806,9 +1811,12 @@ function dayTick(){
   if(state.babies.length>=6)return;
   for(const k in state.rel){const rel=state.rel[k];if(rel.stage<5)continue;const[a,b]=k.split('|');const ha=habitById(a),hb=habitById(b);if(!ha||!hb)continue;
     if(ha.preg||hb.preg||letterPending('want_baby',a)||letterPending('want_baby',b))continue;const married=rel.stage===7;
-    if(ha.gender!==hb.gender){const mom=ha.gender==='f'?ha:hb,dad=mom===ha?hb:ha;const ch=married?.035:.008;
-      if(Math.random()<ch){if(married&&Math.random()<.5){sendLetter('want_baby',mom.id,tone(mom,'我和 '+dad.res.name+' 在想…是不是該有個寶寶了？'),['好啊，我支持你們！','再等等吧'],{b:dad.id},1);}
-        else{mom.preg={since:day,partner:dad.id};const msg=married?mom.res.name+' 懷孕了！大約三週後小屋會有新成員':'未婚懷孕！'+mom.res.name+' 和 '+dad.res.name+' 有寶寶了';log(msg);toast(msg,true);saveSoon();}}}
+    if(ha.gender!==hb.gender){const mom=ha.gender==='f'?ha:hb,dad=mom===ha?hb:ha;const ready=married&&(mom.readyBaby||dad.readyBaby)&&!needCrib(1+state.habits.filter(x=>x.preg).length);const ch=ready?.3:married?.035:.008;
+      if(Math.random()<ch){if(married&&needCrib(1+state.habits.filter(x=>x.preg).length)){askCrib(mom.id,false);}
+        else if(married&&!ready&&Math.random()<.5){sendLetter('want_baby',mom.id,tone(mom,'我和 '+dad.res.name+' 在想…是不是該有個寶寶了？'),['好啊，我支持你們！','再等等吧'],{b:dad.id},1);}
+        else{mom.preg={since:day,partner:dad.id};mom.readyBaby=false;dad.readyBaby=false;const msg=married?mom.res.name+' 懷孕了！大約三週後小屋會有新成員':'未婚懷孕！'+mom.res.name+' 和 '+dad.res.name+' 有寶寶了';log(msg);toast(msg,true);saveSoon();}}}
+    else if(married&&(ha.readyBaby||hb.readyBaby)&&!needCrib(1)&&Math.random()<.3){ha.readyBaby=false;hb.readyBaby=false;birth(a,b,true);}
+    else if(married&&day-rel.since>=7&&Math.random()<.03&&needCrib(1+state.habits.filter(x=>x.preg).length))askCrib(a,false);
     else if(married&&day-rel.since>=7&&Math.random()<.03)sendLetter('want_baby',a,tone(ha,'我和 '+hb.res.name+' 想領養一個孩子，你覺得呢？'),['好啊，我支持你們！','再等等吧'],{b},1);}
 }
 function birth(a,b,adopt){
@@ -1817,7 +1825,7 @@ function birth(a,b,adopt){
   state.babies.push(baby);syncBabies();statAdd('births');addPhoto('baby',(adopt?'領養':'出生')+'：'+baby.name,[baby.id,a,b]);const msg=(adopt?nameOf(a)+' 和 '+nameOf(b)+' 領養了寶寶「':'寶寶出生了！'+nameOf(a)+' 和 '+nameOf(b)+' 的孩子「')+baby.name+'」';
   log(msg);toast(msg,true);celebratePair(a,b,true);saveSoon();renderList();
   const pool=NICE_NAMES[gen].filter(n=>n!==baby.name).sort(()=>Math.random()-.5);const names=[baby.name,pool[0],pool[1]].filter(Boolean);
-  const from=habitById(a)?a:b;if(habitById(from))sendLetter('baby_name',from,'寶寶來到我們家了！要幫寶寶取什麼名字呢？',[...new Set(names)].map(n=>'叫「'+n+'」'),{baby:baby.id,names:[...new Set(names)]},0);
+  const from=habitById(a)?a:b;if(habitById(from)&&needCrib(0))setTimeout(()=>askCrib(from,true),100);if(habitById(from))sendLetter('baby_name',from,'寶寶來到我們家了！要幫寶寶取什麼名字呢？',[...new Set(names)].map(n=>'叫「'+n+'」'),{baby:baby.id,names:[...new Set(names)]},0);
 }
 function celebratePair(a,b,big){for(const id of[a,b]){const r=RES.find(x=>x.id===id);if(r){r.celebrate=big?3:1.5;showBub(r,'heart',3);}}}
 
@@ -1889,10 +1897,10 @@ function startEmergency(type,d){
       ignore:()=>{r.insomnia=false;r.needs.energy-=20;r.needs.mood-=10;return r.name+' 整晚沒睡好。';}};
     r.insomnia=true;abortPlan(r);startPlan(r,'window',true);}
   else if(type==='baby'){if(!BABIES.length)return;const b=choice(BABIES);
-    e={type,f:0,ids:b.b.parents,title:'寶寶「'+b.b.name+'」大哭！',desc:'寶寶哭個不停，整個 1 樓都聽得到。',
-      options:[{label:'抱抱寶寶',desc:'寶寶的爸媽心情 +10',run:()=>{for(const id of b.b.parents){const x=RES.find(y=>y.id===id);if(x)x.needs.mood+=10;}b.bub='heart';b.bubT=3;return '你抱起寶寶，他咯咯笑了。';}},
+    e={type,f:b.f||0,ids:b.b.parents,title:'寶寶「'+b.b.name+'」大哭！',desc:'寶寶哭個不停，整層樓都聽得到。',
+      options:[{label:'抱抱寶寶',desc:'寶寶的爸媽心情 +10',run:()=>{for(const id of b.b.parents){const x=RES.find(y=>y.id===id);if(x)x.needs.mood+=10;}b.bub='heart';b.bubT=3;b.b.care=100;return '你抱起寶寶，他咯咯笑了。';}},
         {label:'交給爸媽處理',desc:'爸媽精力 −10',run:()=>{for(const id of b.b.parents){const x=RES.find(y=>y.id===id);if(x)x.needs.energy-=10;}return '爸媽把寶寶哄睡了，累壞了。';}}],
-      ignore:()=>{for(const x of RES)if(x.f===0)x.needs.mood-=8;return '寶寶哭了好久，1 樓的大家都沒睡好。';}};
+      ignore:()=>{for(const x of RES)if(x.f===(b.f||0))x.needs.mood-=8;b.b.care=Math.max(b.b.care||0,40);return '寶寶哭了好久，同一層樓的大家都沒睡好。';}};
     b.crying=true;}
   if(!e)return;
   e.until=performance.now()+EMG_TIME;EMG=e;renderAlert();renderFloors();toast('緊急狀況：'+e.title,true);log('⚠ '+e.title);
@@ -2071,6 +2079,7 @@ const LETTERS={
   baby_name:{major:1,run(L,i){const bb=state.babies.find(x=>x.id===L.data.baby);if(!bb)return '';const nm=L.data.names[i];if(nm){bb.name=nm;syncBabies();}return '寶寶的名字決定叫「'+bb.name+'」了！';}},
   want_baby:{major:1,run(L,i){const a=L.from,b=L.data.b;const ha=habitById(a),hb=habitById(b);if(!hb)return '';
     if(i!==0){moodAdd(a,-4);return nameOf(a)+' 說那就再等等，先享受兩人生活';}
+    if(needCrib(1+state.habits.filter(x=>x.preg).length)){askCrib(a,false);return nameOf(a)+' 說：「那我們要先準備一張嬰兒床！」';}
     if(ha.gender!==hb.gender){const mom=ha.gender==='f'?ha:hb,dad=mom===ha?hb:ha;if(!mom.preg){mom.preg={since:houseDay(),partner:dad.id};}return mom.res.name+' 懷孕了！大約三週後寶寶就會出生';}
     birth(a,b,true);return nameOf(a)+' 和 '+nameOf(b)+' 去領養了一個寶寶！';}},
   job_offer:{run(L,i){const h=habitById(L.from);const j=JOBS[L.data.job];if(i!==0||!j)return h.res.name+' 決定維持現狀';h.job=L.data.job;h.shifts=0;h.promo=0;h.lastShift=null;moodAdd(h.id,10);return h.res.name+' 換了新工作：'+j.name+'！'+jobDesc(j);}},
@@ -2516,6 +2525,70 @@ function notifyCheck(){try{if(!SET.notify||!('Notification' in window)||Notifica
   if(new Date().getHours()<(SET.notifyAt||21))return;const left=state.habits.filter(h=>!isChecked(h,t));SET.lastNotify=t;saveSettings();if(!left.length)return;
   const h=choice(left);new Notification('習慣小屋',{body:left.length+' 個習慣還沒打卡。'+h.res.name+'：「'+h.name+'」今天還沒做喔！',icon:'icons/icon-192.png',tag:'habit-house-'+t});}catch(e){}}
 
+/* =========================================================
+   Kids: cribs, caretakers, bedtime and parenting
+   ========================================================= */
+function roomOfHabit(h){const f=floorOfSlot(h.slot),i=h.slot%PER_FLOOR;return{f,x:7*i,y:8,w:7,h:5};}
+function inHabitRoom(p,h){const R=roomOfHabit(h);return(p.f||0)===R.f&&p.tx>=R.x&&p.tx<R.x+R.w&&p.ty>=R.y&&p.ty<R.y+R.h;}
+function familyHome(b){const ps=b.parents.map(habitById).filter(Boolean);if(!ps.length)return null;const ho=HOMEOWN[ps[0].id];return habitById(ho)||ps.find(h=>h.gender==='f')||ps[0];}
+function cribMap(){const m=new Map();const free=state.placed.filter(p=>p.id==='crib');
+  for(const b of state.babies){if(kidStage(b)>1)continue;const home=familyHome(b);let k=home?free.findIndex(p=>inHabitRoom(p,home)):-1;if(k<0)k=free.findIndex(p=>b.parents.some(id=>habitById(id)&&inHabitRoom(p,habitById(id))));if(k<0)k=0;
+    if(free[k]){m.set(b.id,free[k]);free.splice(k,1);}}return m;}
+function cribCount(){return state.placed.filter(p=>p.id==='crib').length+(state.inv.crib||0);}
+function smallKids(){return state.babies.filter(b=>kidStage(b)<=1).length;}
+function needCrib(extra){return cribCount()<smallKids()+(extra||0);}
+function freeTileNear(f,x0,y0,rad){const w=WORLDS[f];if(!w)return null;const Lw=w.L,bl=w.blocked;const used=new Set(w.SP.map(s=>s.tx+','+s.ty));
+  for(let r=0;r<=(rad||3);r++)for(let dy=-r;dy<=r;dy++)for(let dx=-r;dx<=r;dx++){if(Math.max(Math.abs(dx),Math.abs(dy))!==r)continue;const x=x0+dx,y=y0+dy;
+    if(x<0||y<0||x>=Lw.W||y>=Lw.D||Lw.cell[y][x]<0||bl[y][x]||used.has(x+','+y)||Lw.doorTiles.has(x+','+y))continue;return[x,y];}return null;}
+function kidBed(b){const c=cribMap().get(b.id);if(c)return{f:c.f||0,tx:c.tx,ty:c.ty,crib:true};
+  const home=familyHome(b);if(!home)return{f:0,tx:12,ty:7,crib:false};const R=roomOfHabit(home);const t=freeTileNear(R.f,R.x+1,R.y+3,3)||[R.x+1,R.y+3];return{f:R.f,tx:t[0],ty:t[1],crib:false};}
+function caretaker(b){const home=r=>r.state!=='away'&&!(r.step&&r.step.party)&&!(r.sick>gameMin);
+  const ps=RES.filter(r=>b.b.parents.includes(r.id)&&home(r));if(ps.length)return ps.find(r=>!(r.state==='act'&&r.step&&r.step.sleep))||ps[0];
+  const others=RES.filter(r=>home(r)&&!(r.state==='act'&&r.step&&r.step.sleep)&&r.state!=='stairs');if(!others.length)return null;
+  return others.map(r=>{const P=persOf(habitById(r.id));return[r,(P.has('helpful')||P.has('gentle')?30:0)+b.b.parents.reduce((a,id)=>a+(habitById(id)?relGet(r.id,id).aff:0),0)];}).sort((a,c)=>c[1]-a[1])[0][0];}
+function placeKid(b,f,tx,ty){b.f=f;b.tx=tx;b.ty=ty;b.px=(tx+.5)*T;b.py=(ty+.5)*T;b.path=[];}
+function updateBaby(b,dtR,dtG){
+  const kb=b.b;const st=kidStage(kb);const hr=hour();const night=st<=1?(hr>=20.5||hr<7):(hr>=22.5||hr<7);
+  if(b.f==null)b.f=0;if(b.bubT>0){b.bubT-=dtR;if(b.bubT<=0)b.bub=null;}
+  kb.care=clamp((kb.care==null?80:kb.care)-(b.sleep?.02:st===0?.15:st===1?.1:.05)*dtG,0,100);
+  if(night){if(!b.sleep){const bed=kidBed(b);placeKid(b,bed.f,bed.tx,bed.ty);b.sleep=true;b.inCrib=bed.crib;b.alone=false;
+      if(Math.random()<.35)log(kb.name+(bed.crib?' 被抱到嬰兒床上睡覺了':st<=1?' 沒有嬰兒床，只好睡在爸媽房間的地上':' 回房間睡覺了'));}
+    if(Math.random()<dtR*.25){b.bub='zz';b.bubT=1.6;}return;}
+  if(b.sleep){b.sleep=false;b.inCrib=false;}
+  if(b.crying&&Math.random()<dtR*1.5){b.bub='sad';b.bubT=1;}
+  if(kb.care<15&&Math.random()<dtR*.4){b.bub='sad';b.bubT=1.2;}
+  let ct=null;
+  if(st<=1){ct=caretaker(b);
+    if(!ct){if(!b.alone){const bed=kidBed(b);placeKid(b,bed.f,bed.tx,bed.ty);b.inCrib=bed.crib;b.alone=true;if(Math.random()<.4)log('家裡沒人，'+kb.name+(bed.crib?' 只好待在嬰兒床上':' 只好待在房間裡'));}return;}
+    b.alone=false;if(ct.state==='stairs')return;
+    if(ct.f!==b.f||b.inCrib){const t=freeTileNear(ct.f,ct.tx,ct.ty,2)||[ct.tx,ct.ty];placeKid(b,ct.f,t[0],t[1]);b.inCrib=false;}}
+  useFloor(b.f);
+  if(b.path.length){let left=(st===0?.9:st===1?1.3:1.6)*T*dtR*Math.sqrt(speed);while(left>0&&b.path.length){const[nx,ny]=b.path[0];const tx=(nx+.5)*T,ty=(ny+.5)*T;const dx=tx-b.px,dy=ty-b.py;const d=Math.abs(dx)+Math.abs(dy);
+      if(d<=left){b.px=tx;b.py=ty;b.tx=nx;b.ty=ny;b.path.shift();left-=d;}else{const mx=Math.sign(dx)*Math.min(Math.abs(dx),left);b.px+=mx;b.py+=Math.sign(dy)*Math.min(Math.abs(dy),Math.max(0,left-Math.abs(mx)));left=0;}}
+    b.walkT+=dtR*5;return;}
+  b.wait-=dtR*2*speed;if(b.wait>0)return;b.wait=st===0?rand(3,8):rand(6,18);
+  let gx,gy;
+  if(ct){const r0=st===0?1:Math.random()<.6?2:5;gx=ct.tx+Math.round((Math.random()*2-1)*r0);gy=ct.ty+Math.round((Math.random()*2-1)*r0);}
+  else{const home=familyHome(kb);const R=home?roomOfHabit(home):{x:9,y:1,w:12,h:6};gx=Math.random()<.5?R.x+Math.floor(Math.random()*R.w):1+Math.floor(Math.random()*30);gy=Math.random()<.5?R.y+Math.floor(Math.random()*R.h):1+Math.floor(Math.random()*7);}
+  if(gx<0||gy<0||gx>=L.W||gy>=L.D||blocked[gy][gx]||L.cell[gy][gx]<0)return;const p=bfs(b.tx,b.ty,gx,gy);if(p&&p.length<30)b.path=p;
+  if(Math.random()<.4){b.bub=choice(['heart','note','smile','q']);b.bubT=2;}}
+const CARE_TXT=[['餵寶寶喝奶','幫寶寶換尿布','抱著寶寶哄睡','陪寶寶玩搖鈴'],['陪孩子玩積木','唸故事書給孩子聽','教孩子畫畫','陪孩子玩捉迷藏'],['陪孩子寫功課','跟孩子聊學校的事','教孩子騎腳踏車','陪孩子打電動']];
+function kidToCare(r){const P=persOf(habitById(r.id));let best=null,bs=0;
+  for(const b of BABIES){const kb=b.b;if(b.sleep||b.f!==r.f&&kidStage(kb)>0)continue;const par=kb.parents.includes(r.id);if(!par&&!(P.has('helpful')||P.has('gentle')||P.has('clingy')))continue;
+    const need=(75-(kb.care==null?80:kb.care))*(par?1:.5);if(need>bs){bs=need;best=b;}}return best;}
+function startBabycare(r,b){if(b.f==null)return false;useFloor(b.f);const t=freeTileNear(b.f,b.tx,b.ty,2);if(!t)return false;
+  const dx=b.tx-t[0],dy=b.ty-t[1];const face=Math.abs(dx)>=Math.abs(dy)?(dx>0?'SE':'NW'):(dy>0?'SW':'NE');const sp=spot('care',t[0],t[1],'stand',face,{temp:true});
+  const st0=kidStage(b.b);const step=st('care',st0===0?20:30,{fixed:sp,txt:choice(CARE_TXT[Math.min(2,st0)]).replace(/寶寶|孩子/,b.b.name),kid:b.id,bub:'heart',eff:{mood:.25},face});
+  r.plan=[];r.planAct='babycare';if(!goTo(r,sp,step)){const w=WORLDS[b.f];const k=w.SP.indexOf(sp);if(k>=0)w.SP.splice(k,1);return false;}return true;}
+function careDone(r,s){const b=BABIES.find(x=>x.id===s.kid);if(!b)return;b.b.care=100;b.bub='heart';b.bubT=2.5;b.crying=false;
+  if(Math.random()<.3)log(r.name+' '+s.txt);if(!b.b.parents.includes(r.id))for(const id of b.b.parents)relAdd(r.id,id,2);}
+Object.assign(LETTERS,{crib:{run(L,i){const h=habitById(L.from);if(i!==0){moodAdd(h.id,-4);return h.res.name+' 說那等準備好了再說';}
+  const home=habitById(HOMEOWN[h.id])||h;if(placeInRoom(home,'crib')){rebuild();}else state.inv.crib=(state.inv.crib||0)+1;
+  if(!L.data.after){h.readyBaby=true;const pid=partnerOf(h.id);if(pid&&habitById(pid))habitById(pid).readyBaby=true;}
+  moodAdd(h.id,12);return '嬰兒床放進 '+home.res.name+' 的房間了！'+(L.data.after?'寶寶終於有自己的床了':'他們準備好迎接寶寶了');}}});
+function askCrib(fromId,after){if(letterPending('crib'))return;const h=habitById(fromId);if(!h)return;
+  sendLetter('crib',fromId,tone(h,after?'寶寶來了，可是家裡還沒有嬰兒床…晚上只能睡在地上，可以幫我們買一張嗎？':'我們想要寶寶了，可是家裡還沒有嬰兒床…可以幫我們準備一張嗎？'),['幫忙買嬰兒床（80 金幣）','還沒準備好'],{after:!!after},1,[80,0]);}
+
 /* ---------- per-frame resident update ---------- */
 function updateResident(r,dtR,dtG){
   const h=habitById(r.id);if(!h)return;useFloor(r.f);const active=isActive(h);const n=r.needs;const P=persOf(h);const lv=levelOf(h);
@@ -2556,19 +2629,6 @@ function updateResident(r,dtR,dtG){
   if(r.wait>0){r.wait-=dtL;if(r.waiting&&r.plan.length&&r.wait<=0)nextStep(r);return;}
   if(r.plan.length){nextStep(r);return;}
   decide(r);
-}
-function updateBaby(b,dtR,dtG){
-  useFloor(0);
-  if(b.bubT>0){b.bubT-=dtR;if(b.bubT<=0)b.bub=null;}
-  if(b.crying&&Math.random()<dtR*1.5){b.bub='sad';b.bubT=1;}
-  if(b.path.length){let left=1.1*T*dtR*Math.sqrt(speed);while(left>0&&b.path.length){const[nx,ny]=b.path[0];const tx=(nx+.5)*T,ty=(ny+.5)*T;const dx=tx-b.px,dy=ty-b.py;const d=Math.abs(dx)+Math.abs(dy);
-      if(d<=left){b.px=tx;b.py=ty;b.tx=nx;b.ty=ny;b.path.shift();left-=d;}else{const mx=Math.sign(dx)*Math.min(Math.abs(dx),left);b.px+=mx;b.py+=Math.sign(dy)*Math.min(Math.abs(dy),Math.max(0,left-Math.abs(mx)));left=0;}}
-    b.walkT+=dtR*5;return;}
-  b.wait-=dtR*2*speed;if(b.wait>0)return;b.wait=rand(8,25);
-  const parent=RES.find(r=>b.b.parents.includes(r.id)&&r.f===0&&r.state!=='walk');
-  let gx,gy;if(parent&&Math.random()<.6){gx=parent.tx+choice([-1,0,1]);gy=parent.ty+choice([-1,0,1]);}else{gx=9+Math.floor(Math.random()*12);gy=1+Math.floor(Math.random()*7);}
-  if(gx<0||gy<0||gx>=L.W||gy>=L.D||blocked[gy][gx]||L.cell[gy][gx]<0)return;const p=bfs(b.tx,b.ty,gx,gy);if(p&&p.length<30)b.path=p;
-  if(Math.random()<.4){b.bub=choice(['heart','note','smile','q']);b.bubT=2;}
 }
 function log(t){const hh=Math.floor(hour()),mm=Math.floor((gameMin%60)/10)*10;feed.unshift({t:String(hh).padStart(2,'0')+':'+String(mm).padStart(2,'0'),text:t});if(feed.length>14)feed.pop();feedDirty=true;}
 
@@ -2793,7 +2853,7 @@ function render(t){
   useFloor(viewFloor);g=sctx;OX=BASE_OX;OY=BASE_OY;g.imageSmoothingEnabled=false;drawSky(t);g.drawImage(staticCv,0,0);drawWalls(t);drawGarden(t);
   if((FX.leak[viewFloor]||0)>gameMin){for(let i=0;i<10;i++){const x=21*T+4+Math.floor(hash(i,2,3)*100),y=2*T+Math.floor(hash(3,i,2)*56);g.globalAlpha=.55;faceZ(1,x,x+10+(i%3)*4,y,y+6,'#7fc8f0');g.globalAlpha=1;}
     for(let i=0;i<4;i++){const k=(t*20+i*9)%40;px(...scr(22*T+i*20,T,40-Math.floor(k)),'#7fc8f0');}}
-  const chars=visibleRes().map(r=>({r,info:charScreen(r)})).concat(viewFloor===0?BABIES.map(b=>({baby:b,info:{x:b.px,y:b.py,z:0,pose:'baby'}})):[]).concat(viewFloor===0?PETS.filter(p=>!(p.p.away>gameMin)).map(p=>({pet:p,info:{x:p.px,y:p.py,z:0,pose:'baby'}})):[]);
+  const chars=visibleRes().map(r=>({r,info:charScreen(r)})).concat(BABIES.filter(b=>(b.f||0)===viewFloor).map(b=>({baby:b,info:{x:b.px,y:b.py,z:b.inCrib?7:0,pose:'baby'}}))).concat(viewFloor===0?PETS.filter(p=>!(p.p.away>gameMin)).map(p=>({pet:p,info:{x:p.px,y:p.py,z:0,pose:'baby'}})):[]);
   for(const c of chars){const i=c.info;const[sx,sy]=scr(i.x,i.y,i.z);c.sx=sx;c.sy=sy;c.cx=i.x/T;c.cy=i.y/T;c.depth=c.cx+c.cy;c.bb=[sx-OX-8,sy-OY-30,sx-OX+8,sy-OY+2];let idx=-1;
     for(let k=0;k<OBJ.length;k++){const o=OBJ[k],b=o.bb;if(b[2]<c.bb[0]||b[0]>c.bb[2]||b[3]<c.bb[1]||b[1]>c.bb[3])continue;const[x0,y0,x1,y1]=o.fp;
       const inside=c.cx>x0&&c.cx<x1&&c.cy>y0&&c.cy<y1;if(inside||c.cx>=x1-.001||c.cy>=y1-.001)idx=k;}c.idx=idx;}
@@ -2817,7 +2877,11 @@ function hexA(h,a){const[r,g2,b]=hexToRgb(h);return`rgba(${r},${g2},${b},${a})`;
 function drawChar(c,t){
   if(c.pet){const pt=c.pet;g.globalAlpha=.22;fr(c.sx-4,c.sy-1,9,2,'#1a1424');g.globalAlpha=1;const sp=petSprite(pt.p.kind,pt.p.col,Math.floor(pt.walkT||0)%2);
     if(pt.dir<0){g.save();g.translate(c.sx,0);g.scale(-1,1);g.drawImage(sp,-9,c.sy-14);g.restore();}else g.drawImage(sp,c.sx-9,c.sy-14);return;}
-  if(c.baby){const b=c.baby;g.globalAlpha=.22;fr(c.sx-3,c.sy-1,7,2,'#1a1424');g.globalAlpha=1;const ks=kidStage(b.b);
+  if(c.baby&&c.baby.sleep){const b=c.baby;const ks=kidStage(b.b);
+    if(ks===0||b.inCrib){g.drawImage(babySprite(b.b.look,0,true),c.sx-8,c.sy-12);if(b.inCrib){const[sx,sy]=scr(b.px+4,b.py+6,8);fr(sx-6,sy-3,9,3,'#9fd0f5');}return;}
+    const sp=sprite(kidLook(b.b),'lie','SW',0,null,'closed',false,(b.b.gender==='f'?'f':'')+'L0');const k=ks===1?.62:.8;fr(c.sx-9,c.sy-3,18,5,'#e8d9c0');
+    g.drawImage(sp,0,0,sp.width,sp.height,Math.round(c.sx-AX*k),Math.round(c.sy-AY*k+4),Math.round(sp.width*k),Math.round(sp.height*k));return;}
+  if(c.baby){const b=c.baby;g.globalAlpha=.22;if(!b.inCrib)fr(c.sx-3,c.sy-1,7,2,'#1a1424');g.globalAlpha=1;const ks=kidStage(b.b);
     if(ks>=1){const k=ks===1?.62:.8;const sp=sprite(kidLook(b.b),'stand','SW',b.path.length?Math.floor(b.walkT||0)%4:0,null,'open',false,(b.b.gender==='f'?'f':'')+'L0');
       g.drawImage(sp,0,0,sp.width,sp.height,Math.round(c.sx-AX*k),Math.round(c.sy-AY*k+1),Math.round(sp.width*k),Math.round(sp.height*k));return;}
     g.drawImage(babySprite(b.b.look,Math.floor(b.walkT||0)%2),c.sx-8,c.sy-15);return;}
@@ -2937,13 +3001,13 @@ function blit(){
     const h=habitById(r.id);const lv=h?levelOf(h):0;const label=r.name+(lv?' ★'+lv:'');
     const Y=oy+(hy+(r.bub||r.sick>gameMin||r.secretReady?-16:-3))*zoom-fs*.9;const w=vctx.measureText(label).width+8*dpr;const sel=r.id===selected;
     vctx.fillStyle=sel?'#f4b41a':'rgba(25,27,43,.82)';vctx.fillRect(Math.round(X-w/2),Math.round(Y-fs*.65),Math.round(w),Math.round(fs*1.3));vctx.fillStyle=sel?'#191b2b':'#ffffff';vctx.fillText(label,Math.round(X),Math.round(Y+dpr*.5));}
-  if(viewFloor===0)for(const b of BABIES){const[sx,sy]=scr(b.px,b.py,0);const X=ox+sx*zoom,Y=oy+(sy-18)*zoom-fs;const w=vctx.measureText(b.b.name).width+8*dpr;vctx.fillStyle=b.id===selected?'#f59ac0':'rgba(25,27,43,.7)';
+  for(const b of BABIES){if((b.f||0)!==viewFloor)continue;const[sx,sy]=scr(b.px,b.py,b.inCrib?7:0);const X=ox+sx*zoom,Y=oy+(sy-18)*zoom-fs;const w=vctx.measureText(b.b.name).width+8*dpr;vctx.fillStyle=b.id===selected?'#f59ac0':'rgba(25,27,43,.7)';
     vctx.fillRect(Math.round(X-w/2),Math.round(Y-fs*.65),Math.round(w),Math.round(fs*1.3));vctx.fillStyle='#ffffff';vctx.fillText(b.b.name,Math.round(X),Math.round(Y));}
   if(!build.on&&state.habits.length<MAXH)for(const rm of L.rooms){if(rm.type!=='bed'||SLOT[rm.slot])continue;const[sx,sy]=scr((rm.x+rm.w/2)*T,(rm.y+rm.h/2)*T,0);
     const X=ox+sx*zoom,Y=oy+(sy+16)*zoom;vctx.fillStyle='rgba(25,27,43,.75)';const s='＋ 新增習慣入住';const w=vctx.measureText(s).width+10*dpr;vctx.fillRect(Math.round(X-w/2),Math.round(Y-fs*.7),Math.round(w),Math.round(fs*1.4));vctx.fillStyle='#f4b41a';vctx.fillText(s,Math.round(X),Math.round(Y));}
 }
 function toScene(cx,cy){const ox=Math.round(VW/2-camX*zoom),oy=Math.round(VH/2-camY*zoom);return[(cx*dpr-ox)/zoom,(cy*dpr-oy)/zoom];}
-function hitChar(sx,sy){OX=BASE_OX;OY=BASE_OY;if(viewFloor===0){for(const p of PETS){if(p.p.away>gameMin)continue;const[x,y]=scr(p.px,p.py,0);if(sx>=x-7&&sx<=x+7&&sy>=y-11&&sy<=y+2)return{pet:p};}for(const b of BABIES){const[x,y]=scr(b.px,b.py,0);const tall=[13,18,24,24][kidStage(b.b)];if(sx>=x-6&&sx<=x+6&&sy>=y-tall&&sy<=y+2)return{baby:b};}}
+function hitChar(sx,sy){OX=BASE_OX;OY=BASE_OY;if(viewFloor===0){for(const p of PETS){if(p.p.away>gameMin)continue;const[x,y]=scr(p.px,p.py,0);if(sx>=x-7&&sx<=x+7&&sy>=y-11&&sy<=y+2)return{pet:p};}}for(const b of BABIES){if((b.f||0)!==viewFloor)continue;const[x,y]=scr(b.px,b.py,b.inCrib?7:0);const tall=b.sleep?10:[13,18,24,24][kidStage(b.b)];if(sx>=x-7&&sx<=x+7&&sy>=y-tall&&sy<=y+3)return{baby:b};}
   for(const r of visibleRes()){const i=charScreen(r);const[x,y]=scr(i.x,i.y,i.z);const top=i.pose==='lie'?y-12:y-24;if(sx>=x-8&&sx<=x+8&&sy>=top&&sy<=y+3)return{r};}return null;}
 function hitRoom(sx,sy){useFloor(viewFloor);const[x,y]=tileAt(sx,sy);return roomAt(x,y);}
 const ptrs=new Map();let dragStart=null,pinch=null,moved=false;
@@ -3125,7 +3189,7 @@ function renderRes(){
   const baby=state.babies.find(b=>b.id===selected);
   if(baby){const h2=el('h2',null,KID_STAGE[kidStage(baby)]+' '+baby.name);const cv=document.createElement('canvas');cv.width=16;cv.height=16;const c=cv.getContext('2d');c.imageSmoothingEnabled=false;c.drawImage(babySprite(baby.look,0),0,0);
     cv.style.cssText='width:72px;height:72px;image-rendering:pixelated;background:var(--paper2);border:2px solid var(--ink)';
-    const info=el('p',null,(baby.gender==='f'?'女生':'男生')+' · '+(baby.adopt?'領養':'爸媽')+'：'+nameOf(baby.parents[0])+' 和 '+nameOf(baby.parents[1])+' · '+KID_STAGE[kidStage(baby)]+'（'+kidAge(baby)+' 天大）'+(kidStage(baby)<3?' · 再 '+([28,84,168][kidStage(baby)]-kidAge(baby))+' 天長大':''));info.style.margin='8px 0';
+    const info=el('p',null,(baby.gender==='f'?'女生':'男生')+' · '+(baby.adopt?'領養':'爸媽')+'：'+nameOf(baby.parents[0])+' 和 '+nameOf(baby.parents[1])+' · '+KID_STAGE[kidStage(baby)]+'（'+kidAge(baby)+' 天大）・照顧度 '+Math.round(baby.care==null?80:baby.care)+'%'+(()=>{const B=BABIES.find(x=>x.id===baby.id);if(!B)return '';if(B.sleep)return B.inCrib?'・在嬰兒床睡覺':'・在睡覺（沒有嬰兒床）';if(kidStage(baby)>1)return '';const c=caretaker(B);return c?'・現在由 '+c.name+' 照顧':'・家裡沒人，待在床上';})()+(kidStage(baby)<3?' · 再 '+([28,84,168][kidStage(baby)]-kidAge(baby))+' 天長大':''));info.style.margin='8px 0';
     const lab=el('label','f','幫寶寶改名字');lab.htmlFor='babyName';const row=el('div','inrow');const inp=document.createElement('input');inp.className='t';inp.id='babyName';inp.maxLength=8;inp.value=baby.name;
     const b=el('button','btn primary','改名');b.type='button';b.onclick=()=>{const v=inp.value.trim();if(v){baby.name=v;saveSoon();renderRes();toast('寶寶改名為「'+v+'」');}};row.append(inp,b);
     p.append(h2,cv,info,lab,row);if(kidStage(baby)>=3){const gb=el('button','btn primary block','讓 '+baby.name+' 成為新居民');gb.type='button';gb.onclick=()=>openHabitFromKid(baby.id);p.append(gb);}
@@ -3195,7 +3259,14 @@ function renderRes(){
   mk('房間外觀',()=>openLook(h.id));mk('編輯',()=>openHabit(h.id));
   mk('搬走',()=>confirmDo('讓「'+h.res.name+'」搬出小屋？這會刪除習慣「'+h.name+'」與所有打卡紀錄，房間裡的家具會收回倉庫。',()=>removeHabit(h.id)));
   const H=t=>el('h3',null,t);
-  p.append(head,pers,jc,dm,lvc,mood,doing,needs,H('叫他去做'),cmds,H('聊天'),chat,typing,form,quick,ai,H('好感與人際'),gift,rels,sec,H('打卡紀錄'),cal,cl,row);
+  let hm=null;const pid2=partnerOf(h.id);if(pid2&&relGet(h.id,pid2).stage===7&&habitById(pid2)){const ph=habitById(pid2);const rel2=relGet(h.id,pid2);hm=el('div','jobcard');hm.append(el('b',null,'🏠 夫妻同住'),document.createElement('br'));
+    const opts2=[[h.id,'住 '+h.res.name+' 的房間'],[pid2,'住 '+ph.res.name+' 的房間'],[null,'各住各的']];const row2=el('div','lopts');
+    for(const[own,lab]of opts2){const b2=el('button','btn sm'+((rel2.home||null)===own?' primary':''),lab);b2.type='button';b2.onclick=()=>{if((rel2.home||null)===own)return;let msg;if(own){msg=setHome(h.id,pid2,own);}else{rel2.home=null;rebuildHome();rebuild();msg=h.res.name+' 和 '+ph.res.name+' 決定先各住各的房間';}log(msg);toast(msg,true);saveSoon();renderRes();};row2.append(b2);}
+    hm.append(row2);}
+  const kids=state.babies.filter(b=>b.parents.includes(h.id));let kc=null;if(kids.length){kc=el('div','jobcard');kc.append(el('b',null,'👶 孩子'));
+    for(const b of kids){const B=BABIES.find(x=>x.id===b.id);kc.append(document.createElement('br'),document.createTextNode(b.name+'（'+KID_STAGE[kidStage(b)]+'）・照顧 '+Math.round(b.care==null?80:b.care)+'%・'+(B&&B.sleep?(B.inCrib?'在嬰兒床睡覺':'在睡覺'):B&&B.alone?'沒人在家，自己待著':'有大人陪著')));}
+    kc.append(document.createElement('br'),el('small',null,'嬰兒床：'+cribCount()+' 張（嬰兒和小孩需要，每人一張）'));}
+  p.append(head,pers,jc,...(hm?[hm]:[]),...(kc?[kc]:[]),dm,lvc,mood,doing,needs,H('叫他去做'),cmds,H('聊天'),chat,typing,form,quick,ai,H('好感與人際'),gift,rels,sec,H('打卡紀錄'),cal,cl,row);
   chat.scrollTop=chat.scrollHeight;liveUI();
 }
 function liveUI(){
