@@ -377,6 +377,9 @@ button.chip.mail{background:#e9f3ff;color:var(--ink);position:relative}
           <p class="hint" id="paceInfo">現實 2 小時＝小屋 1 天。</p>
           <label class="chk"><input type="checkbox" id="optCatch"><span>離開時也繼續生活：回來時自動補算（最多 24 小時）</span></label>
           <label class="chk"><input type="checkbox" id="optNotify"><span>打卡提醒通知：每天 <select id="notifyAt" aria-label="提醒時間"><option value="12">12:00</option><option value="18">18:00</option><option value="20">20:00</option><option value="21" selected>21:00</option><option value="22">22:00</option></select> 後還有習慣沒打卡就提醒我（網頁要開著，可以在背景）</span></label>
+          <div class="pace"><span>緊急狀況</span><div class="seg light" role="group" aria-label="緊急狀況頻率" id="emgSeg">
+            <button type="button" data-emg="0">關閉</button><button type="button" data-emg="0.5">少</button><button type="button" data-emg="1">普通</button><button type="button" data-emg="2">常常</button></div></div>
+          <p class="hint" id="emgInfo"></p>
           <label class="chk"><input type="checkbox" id="optEco"><span>省電模式：降低畫面更新率與解析度</span></label>
           <label class="chk"><input type="checkbox" id="optWake"><span>保持螢幕不休眠</span></label>
           <p class="hint" id="idleInfo">資料只存在這個瀏覽器。換裝置或清除瀏覽資料前，請先匯出存檔。</p>
@@ -529,14 +532,42 @@ function shadow(x,y,w,d,a){g.globalAlpha=a||.16;faceZ(0,x-1,x+w+2,y-1,y+d+2,'#20
 function scr(x,y,z){return[OX+x-y,OY+Math.floor((x+y)/2)-(z||0)];}
 function px(x,y,c){g.fillStyle=c;g.fillRect(x,y,1,1);}
 // local frame for rotatable furniture: u = along the back wall, v = toward the front. r=1 swaps axes.
-function mkP(X,Y,r){return{r,
+/* furniture local frame. r: 0=0°, 1=90°, 2=180°, 3=270° (W,D = footprint in px before rotation).
+   r 0/1 draw straight away in authoring order; r 2/3 show the back side, so their pieces are queued
+   and drawn back-to-front with a small dependency sort before flush(). */
+function mkP(X,Y,r,W,D){r=r|0;
+  if(r<2)return{r,flush(){},
   box:(u,v,z,w,d,h,c,hl)=>r?box(X+v,Y+u,z,d,w,h,c,hl):box(X+u,Y+v,z,w,d,h,c,hl),
   front:(v,u0,u1,z0,z1,c)=>r?faceX(X+v,Y+u0,Y+u1,z0,z1,c):faceY(Y+v,X+u0,X+u1,z0,z1,c),
   side:(u,v0,v1,z0,z1,c)=>r?faceY(Y+u,X+v0,X+v1,z0,z1,c):faceX(X+u,Y+v0,Y+v1,z0,z1,c),
   top:(z,u0,u1,v0,v1,c,e)=>r?faceZ(z,X+v0,X+v1,Y+u0,Y+u1,c,e):faceZ(z,X+u0,X+u1,Y+v0,Y+v1,c,e),
   pt:(u,v,z)=>r?scr(X+v,Y+u,z):scr(X+u,Y+v,z),
   w:(u,v)=>r?[X+v,Y+u]:[X+u,Y+v],
-  sh:(u,v,w,d,a)=>r?shadow(X+v,Y+u,d,w,a):shadow(X+u,Y+v,w,d,a)};}
+  sh:(u,v,w,d,a)=>r?shadow(X+v,Y+u,d,w,a):shadow(X+u,Y+v,w,d,a)};
+  W=W||16;D=D||16;const q=[];
+  // world rect of local rect [u,u+w]x[v,v+d]
+  const R=(u,v,w,d)=>r===2?[X+W-u-w,X+W-u,Y+D-v-d,Y+D-v]:[X+D-v-d,X+D-v,Y+W-u-w,Y+W-u];
+  const push=(bb,fn)=>q.push({bb,fn,a:g.globalAlpha});
+  const P={r,
+    box:(u,v,z,w,d,h,c,hl)=>{const[x0,x1,y0,y1]=R(u,v,w,d);push([x0,x1,y0,y1,z,z+Math.max(h,0)],()=>box(x0,y0,z,x1-x0,y1-y0,h,c,hl));},
+    front:(v,u0,u1,z0,z1,c)=>{const[x0,x1,y0]=R(u0,v,u1-u0,0);if(r===2)push([x0,x1,y0,y0,z0,z1],()=>faceY(y0,x0,x1,z0,z1,c));else{const xx=X+D-v,ya=Y+W-u1,yb=Y+W-u0;push([xx,xx,ya,yb,z0,z1],()=>faceX(xx,ya,yb,z0,z1,c));}},
+    side:(u,v0,v1,z0,z1,c)=>{if(r===2){const xx=X+W-u,ya=Y+D-v1,yb=Y+D-v0;push([xx,xx,ya,yb,z0,z1],()=>faceX(xx,ya,yb,z0,z1,c));}else{const yy=Y+W-u,xa=X+D-v1,xb=X+D-v0;push([xa,xb,yy,yy,z0,z1],()=>faceY(yy,xa,xb,z0,z1,c));}},
+    top:(z,u0,u1,v0,v1,c,e)=>{const[x0,x1,y0,y1]=R(u0,v0,u1-u0,v1-v0);push([x0,x1,y0,y1,z,z],()=>faceZ(z,x0,x1,y0,y1,c,e));},
+    pt:(u,v,z)=>{const[x0,,y0]=R(u,v,0,0);return scr(x0,y0,z);},
+    w:(u,v)=>{const[x0,,y0]=R(u,v,0,0);return[x0,y0];},
+    sh:(u,v,w,d,a)=>{const[x0,x1,y0,y1]=R(u,v,w,d);q.push({bb:[x0,x1,y0,y1,-9,-9],fn:()=>shadow(x0,y0,x1-x0,y1-y0,a),a:1,sh:1});},
+    flush(){if(!q.length)return;const n=q.length,e=.01;
+      const before=(A,B)=>{const a=A.bb,b=B.bb;const ox=a[0]<b[1]-e&&b[0]<a[1]-e||a[0]===a[1]||b[0]===b[1],oy=a[2]<b[3]-e&&b[2]<a[3]-e||a[2]===a[3]||b[2]===b[3];
+        if(A.sh&&!B.sh)return true;if(B.sh)return false;
+        if(a[5]<=b[4]+e&&ox&&oy&&a[5]<b[5])return true;if(b[5]<=a[4]+e&&ox&&oy&&b[5]<a[5])return false;
+        if(a[1]<=b[0]+e&&!(b[1]<=a[0]+e))return true;if(a[3]<=b[2]+e&&!(b[3]<=a[2]+e))return true;return false;};
+      const indeg=new Array(n).fill(0),adj=Array.from({length:n},()=>[]);
+      for(let i=0;i<n;i++)for(let j=0;j<n;j++)if(i!==j&&before(q[i],q[j])&&!before(q[j],q[i])){adj[i].push(j);indeg[j]++;}
+      const done=new Array(n).fill(false);const ga=g.globalAlpha;
+      for(let k=0;k<n;k++){let pick=-1;for(let i=0;i<n;i++)if(!done[i]&&indeg[i]===0){pick=i;break;}if(pick<0)for(let i=0;i<n;i++)if(!done[i]){pick=i;break;}
+        done[pick]=true;for(const j of adj[pick])indeg[j]--;g.globalAlpha=q[pick].a;q[pick].fn();}
+      g.globalAlpha=ga;q.length=0;}};
+  return P;}
 
 /* =========================================================
    Palettes
@@ -620,7 +651,7 @@ const RUGS=[['#d27b62','#a9503c'],['#7d9bc9','#4c6a9a'],['#9bc58a','#5f8a4f'],['
 const CURT=['#e86e6e','#5a7bb5','#7bc67f','#f6cf4a','#b96ad0','#f2f2ea'];
 const CAT={
   bed:{name:'單人床',cat:'room',price:50,w:2,d:3,h:20,does:'睡覺、躺著滑手機',spots:[{du:0,dv:0,kind:'bed',pose:'lie',face:'out',anchor:[16,8,13]}],draw:(P,t,o)=>bedP(P,o,false)},
-  dbed:{name:'雙人床',cat:'room',price:160,w:3,d:3,h:20,does:'夫妻同居時一起睡',spots:[{du:0,dv:0,kind:'bed',pose:'lie',face:'out',anchor:[12,8,13]},{du:2,dv:0,kind:'bed',pose:'lie',face:'out',anchor:[36,8,13]}],draw:(P,t,o)=>dbedP(P,o)},
+  dbed:{name:'雙人床',cat:'room',price:160,w:3,d:3,h:20,does:'夫妻同居時一起睡',spots:[{du:0,dv:0,kind:'bed',pose:'lie',face:'out',anchor:[12,8,13],blk:[2,22]},{du:2,dv:0,kind:'bed',pose:'lie',face:'out',anchor:[36,8,13],blk:[24,22]}],draw:(P,t,o)=>dbedP(P,o)},
   princess:{name:'公主床',cat:'room',price:120,w:2,d:3,h:44,does:'粉紅床幔，睡得像公主',spots:[{du:0,dv:0,kind:'bed',pose:'lie',face:'out',anchor:[16,8,13]}],draw:(P,t,o)=>bedP(P,o,true)},
   wardrobe:{name:'衣櫃',cat:'room',price:40,w:1,d:1,h:38,does:'換衣服',spots:[{du:0,dv:1,kind:'wardrobe',pose:'stand',face:'in'}],
     draw:(P)=>{const c='#a5784f';P.sh(1,2,14,12);P.box(1,2,0,14,12,34,c);P.front(14,8,9,2,32,S(c,.6));P.front(14,6,7,15,19,'#f1d38a');P.front(14,10,11,15,19,'#f1d38a');P.box(3,4,34,9,8,4,'#d9c3a0');}},
@@ -1002,7 +1033,7 @@ function spot(kind,tx,ty,pose,face,opt){const s=Object.assign({kind,tx,ty,pose,f
 const spotsOf=k=>SP.filter(s=>s.kind===k);
 const usingKind=(k,owner)=>SP.some(s=>s.kind===k&&s.using&&(owner==null||s.owner===owner));
 function drawChair(X,Y,face,wood,cush){chairP(mkP(X,Y,0),0,0,face==='SW'?'out':'in',wood,cush);}
-const FACE=[{in:'NE',out:'SW'},{in:'NW',out:'SE'}];
+const FACE=[{in:'NE',out:'SW'},{in:'NW',out:'SE'},{in:'SW',out:'NE'},{in:'SE',out:'NW'}];
 const OPP={NE:'SW',SW:'NE',NW:'SE',SE:'NW'};
 let SLOT={};
 function baseWindows(f){const w=[{p:'y',a0:22*T+3,a1:23*T+13,z0:28,z1:40,slots:['h22','h23']}];
@@ -1134,24 +1165,24 @@ function wallFaceColor(roomId){
   return{kitchen:'#e1ecdf',living:'#ead6bc',lounge:'#e4dcef',bath:'#d4ebf2',hall:'#e3d7ca',stairs:'#dfe6ea'}[r.type]||'#e3d7ca';
 }
 function objBBox(o){const[x0,y0,x1,y1]=o.fp;const X0=x0*T,Y0=y0*T,X1=x1*T,Y1=y1*T;return[X0-Y1-2,Math.floor((X0+Y0)/2)-(o.h||40)-4,X1-Y0+2,Math.floor((X1+Y1)/2)+3];}
-function defTiles(def,tx,ty,r){const tr=(du,dv)=>r?[tx+dv,ty+du]:[tx+du,ty+dv];
+function defTiles(def,tx,ty,r){r=r|0;const tr=(du,dv)=>r===1?[tx+dv,ty+du]:r===2?[tx+def.w-1-du,ty+def.d-1-dv]:r===3?[tx+def.d-1-dv,ty+def.w-1-du]:[tx+du,ty+dv];
   const all=[];for(let a=0;a<def.w;a++)for(let b=0;b<def.d;b++)all.push([a,b]);
   return{mask:(def.mask||all).map(([a,b])=>tr(a,b)),fp:all.map(([a,b])=>tr(a,b)),spots:(def.spots||[]).map(s=>tr(s.du,s.dv)),tr};}
 function roomOwner(room){return room&&room.type==='bed'&&SLOT[room.slot]?SLOT[room.slot].id:null;}
 function instPlaced(p){
   const def=CAT[p.id];
   if(def.wall){const inst={u:p.u,p,def,seed:hashStr(p.u)};WALLITEMS.push(inst);if(p.id==='curtain'){const w=WINDOWS.find(w=>w.slots.includes(p.slot));if(w)w.cur=CURT[inst.seed%CURT.length];}return inst;}
-  const room=roomAt(p.tx,p.ty),owner=roomOwner(room);const X=p.tx*T,Y=p.ty*T,P=mkP(X,Y,p.r);
+  const room=roomAt(p.tx,p.ty),owner=roomOwner(room);const X=p.tx*T,Y=p.ty*T,P=mkP(X,Y,p.r,def.w*T,def.d*T);
   const inst={u:p.u,p,def,owner,P,spots:[],seed:hashStr(p.u),blanket:owner?habitById(owner).room.blanket:'#e86e6e'};
   inst.busy=k=>inst.spots.some(s=>s.using&&(!k||s.kind===k));
   const tt=defTiles(def,p.tx,p.ty,p.r);
   if(def.flat)FLATS.push(inst);
   else{const parts=def.parts||[{fp:[0,0,def.w,def.d],h:def.h,draw:def.draw}];
-    for(const pt of parts){const[u0,v0,u1,v1]=pt.fp;const fp=p.r?[p.tx+v0,p.ty+u0,p.tx+v1,p.ty+u1]:[p.tx+u0,p.ty+v0,p.tx+u1,p.ty+v1];
-      obj(Math.floor(fp[0]),Math.floor(fp[1]),1,1,pt.h||def.h,(t)=>{if(build.ghost&&build.ghost.move===p.u)return;pt.draw(P,t,inst);},{block:false,fp,depth:(fp[0]+fp[2])/2+(fp[1]+fp[3])/2,inst});}
+    for(const pt of parts){const[u0,v0,u1,v1]=pt.fp;const fw=def.w,fd=def.d;const fp=p.r===1?[p.tx+v0,p.ty+u0,p.tx+v1,p.ty+u1]:p.r===2?[p.tx+fw-u1,p.ty+fd-v1,p.tx+fw-u0,p.ty+fd-v0]:p.r===3?[p.tx+fd-v1,p.ty+fw-u1,p.tx+fd-v0,p.ty+fw-u0]:[p.tx+u0,p.ty+v0,p.tx+u1,p.ty+v1];
+      obj(Math.floor(fp[0]),Math.floor(fp[1]),1,1,pt.h||def.h,(t)=>{if(build.ghost&&build.ghost.move===p.u)return;pt.draw(P,t,inst);P.flush();},{block:false,fp,depth:(fp[0]+fp[2])/2+(fp[1]+fp[3])/2,inst});}
     for(const[x,y]of tt.mask)blockOwner[y][x]=p.u;}
   (def.spots||[]).forEach((sd,i)=>{const[x,y]=tt.spots[i];const s=spot(sd.kind,x,y,sd.pose,FACE[p.r][sd.face],{z:sd.z||0,owner,src:p.u,inst,P});
-    if(sd.anchor){const[wx,wy]=P.w(sd.anchor[0],sd.anchor[1]);s.ax=wx;s.ay=wy;s.az=sd.anchor[2];s.blanket=p.id==='princess'?'#f59ac0':inst.blanket;}inst.spots.push(s);});
+    if(sd.anchor){const[wx,wy]=P.w(sd.anchor[0],sd.anchor[1]);s.ax=wx;s.ay=wy;s.az=sd.anchor[2];s.blanket=p.id==='princess'?'#f59ac0':inst.blanket;s.blk=sd.blk||[2,28];}inst.spots.push(s);});
   if(def.light){const[wx,wy]=P.w(def.light.u,def.light.v);lights.push({x:wx,y:wy,z:def.light.z,r:def.light.r,c:def.light.c,when:()=>!blackoutOn()});}
   INST.push(inst);return inst;
 }
@@ -1304,7 +1335,7 @@ function drawStatic(){
   drawRug(1*T,6*T+5,34*T,8*T-5,'#8a5a78','#5e3a52',false);drawRug(25*T+2,1*T+2,26*T-1,2*T-2,'#f2a7b8','#d97b92',false);drawRug(26*T+2,5*T+1,28*T-4,6*T-2,'#f2a7b8','#d97b92',false);
   if(f===0){const X=EXIT[0]*T,Y=EXIT[1]*T;faceZ(1,X+2,X+T-1,Y-T+4,Y+T-3,'#6b4a2e');faceZ(1,X+4,X+T-3,Y-T+6,Y+T-5,'#c9a77c');
     for(let i=0;i<4;i++)faceZ(-4,L.W*T+4+i*12,L.W*T+12+i*12,Y-5+((i%2)*4),Y+3+((i%2)*4),'#c9c3b8');}
-  for(const fl of FLATS)fl.def.draw(fl.P,0,fl);
+  for(const fl of FLATS){fl.def.draw(fl.P,0,fl);fl.P.flush();}
   for(const w of L.walls){if(!w.tall)continue;const r=L.rooms[w.front];const c=wallFaceColor(w.front);
     if(w.o==='h'){const X=w.x*T;box(X,-3,0,T,3,TALL,c,false);faceZ(TALL,X,X+T,-3,0,'#f7f2ea');wallSkin('y',X,X+T,r,c);}
     else{const Y=w.y*T;box(-3,Y,0,3,T,TALL,c,false);faceZ(TALL,-3,0,Y,Y+T,'#f7f2ea');wallSkin('x',Y,Y+T,r,c);}}
@@ -1920,7 +1951,10 @@ function startEmergency(type,d){
 function emergencyTick(){if(CATCHING||document.hidden||CATCH.rem>0)return;
   if(EMG)return;const hr=hour();const r=Math.random();
   const types=[['sick',.3],['leak',.2],['blackout',.2]];if(isNight()&&RES.some(x=>x.step&&x.step.sleep&&x.state==='act'))types.push(['insomnia',.25]);if(BABIES.length)types.push(['baby',.2]);
-  const tot=types.reduce((s,t)=>s+t[1],0);let v=r*tot;for(const[t,w]of types){v-=w;if(v<=0){startEmergency(t);return;}}
+  const act=RES.filter(x=>{const h=habitById(x.id);return h&&isActive(h)&&x.state!=='away'&&x.state!=='stairs'&&!(x.step&&x.step.sleep&&x.state==='act');});
+  let pair=null;for(const a of act)for(const b of act)if(a!==b&&a.f===b.f){const rel=relGet(a.id,b.id);if(!pair||rel.aff<pair[2])pair=[a,b,rel.aff];}if(pair)types.push(['fight',.25]);
+  const cook=RES.find(x=>x.state==='act'&&x.spot&&x.spot.kind==='stove');if(cook)types.push(['smoke',.4]);
+  const tot=types.reduce((s,t)=>s+t[1],0);let v=r*tot;for(const[t,w]of types){v-=w;if(v<=0){startEmergency(t,t==='fight'?{a:pair[0],b:pair[1]}:t==='smoke'?{r:cook}:undefined);if(!EMG&&t!=='sick')startEmergency('sick');return;}}
 }
 function resolveEmergency(i){
   if(!EMG)return;const o=EMG.options[i];if(o.cost&&state.coins<o.cost){toast('金幣不夠，換個方法吧');return;}if(o.cost)state.coins-=o.cost;
@@ -2039,8 +2073,8 @@ function upgradeBed(ownerId){const h=habitById(ownerId);if(!h)return false;const
   const inRoom=p=>(p.f||0)===f&&CAT[p.id]&&!CAT[p.id].wall&&p.tx>=7*i&&p.tx<7*i+7&&p.ty>=8;
   if(state.placed.some(p=>p.id==='dbed'&&inRoom(p)))return true;
   const old=state.placed.find(p=>(p.id==='bed'||p.id==='princess')&&inRoom(p));useFloor(f);const room=L.rooms.find(q=>q.type==='bed'&&q.slot===h.slot);
-  const tries=[];if(old)tries.push([old.tx,old.ty,old.r],[old.tx-1,old.ty,old.r]);tries.push([room.x+4,room.y+2,0]);
-  for(let y=room.y;y<room.y+room.h;y++)for(let x=room.x;x<room.x+room.w;x++)for(const rr of[0,1])tries.push([x,y,rr]);
+  const r0=old?(old.r|0):0;const tries=[];if(old)tries.push([old.tx,old.ty,r0],[old.tx-1,old.ty,r0],[old.tx,old.ty-1,r0],[old.tx-1,old.ty-1,r0]);tries.push([room.x+4,room.y+2,r0]);
+  for(const rr of[r0,(r0+2)%4,(r0+1)%4,(r0+3)%4])for(let y=room.y;y<room.y+room.h;y++)for(let x=room.x;x<room.x+room.w;x++)tries.push([x,y,rr]);
   for(const[x,y,rr]of tries){if(canPlace('dbed',x,y,rr,old?old.u:null).ok){if(old){state.placed=state.placed.filter(p=>p!==old);state.inv[old.id]=(state.inv[old.id]||0)+1;}
     state.placed.push({u:uidGen('p'),id:'dbed',tx:x,ty:y,r:rr,f});return true;}}
   return false;}
@@ -2900,7 +2934,7 @@ function drawChar(c,t){
     g.drawImage(babySprite(b.b.look,Math.floor(b.walkT||0)%2),c.sx-8,c.sy-15);return;}
   const r=c.r,i=c.info;
   if(i.special==='bed'){const sp=sprite(r.look,'lie','SW',0,null,i.eyes,i.gray,i.flags);g.drawImage(sp,c.sx-AX,c.sy-AY+5);
-    const s=r.spot,bc=s.blanket||'#e86e6e';if(s.P){s.P.box(2,14,10,28,32,3,bc);s.P.top(13,2,30,14,16,S(bc,1.25));}
+    const s=r.spot,bc=s.blanket||'#e86e6e';if(s.P){const[b0,bw]=s.blk||[2,28];s.P.box(b0,14,10,bw,32,3,bc);s.P.top(13,b0,b0+bw,14,16,S(bc,1.25));s.P.flush();}
     if(i.prop==='phone'){const[sx,sy]=scr(s.ax,s.ay+6,16);fr(sx-1,sy-3,3,4,'#2a2a2a');fr(sx,sy-2,1,2,'#8fd6ff');}return;}
   if(i.special==='tub'){const sp=sprite(r.look,'lie','SW',0,null,i.eyes,i.gray,i.flags);g.drawImage(sp,c.sx-AX,c.sy-AY+4);
     const X=26*T,Y=4*T;for(let k=0;k<16;k++){const bx=X+5+((k*7)%22),by=Y+5+((k*5)%8);const[sx,sy]=scr(bx,by,11);fr(sx,sy-1,2,2,'#ffffff');}return;}
@@ -2946,8 +2980,8 @@ function drawBuildOverlay(t){
   if(gh.tx==null)return;const tt=defTiles(def,gh.tx,gh.ty,gh.r);
   g.globalAlpha=.4;for(const[x,y]of tt.fp)faceZ(1,x*T,x*T+16,y*T,y*T+16,gh.ok?'#38b764':'#e43b44');g.globalAlpha=.8;
   for(const[x,y]of tt.spots)faceZ(1,x*T+5,x*T+11,y*T+5,y*T+11,'#f4b41a');g.globalAlpha=1;
-  const P=mkP(gh.tx*T,gh.ty*T,gh.r);const fake={u:'ghost',p:{paint:40},seed:7,busy:()=>false,blanket:'#e86e6e'};
-  g.globalAlpha=.75;if(def.parts)for(const pt of def.parts)pt.draw(P,t,fake);else def.draw(P,t,fake);g.globalAlpha=1;
+  const P=mkP(gh.tx*T,gh.ty*T,gh.r,def.w*T,def.d*T);const fake={u:'ghost',p:{paint:40},seed:7,busy:()=>false,blanket:'#e86e6e'};
+  g.globalAlpha=.75;if(def.parts)for(const pt of def.parts){pt.draw(P,t,fake);P.flush();}else{def.draw(P,t,fake);P.flush();}g.globalAlpha=1;
 }
 function setBuild(on){build.on=on;build.ghost=null;build.sel=null;$('#buildBtn').setAttribute('aria-pressed',String(on));stage.classList.toggle('building',on);
   if(on)showTab('build');else if(curTab==='build')showTab(selected?'res':'habits');renderBuildBar();renderBuild();}
@@ -2956,7 +2990,7 @@ function pickGhost(id,move){const def=CAT[id];build.sel=null;build.ghost={id,r:0
   validateGhost();renderBuildBar();renderBuild();}
 function ghostAt(sx,sy){const gh=build.ghost;if(!gh)return;useFloor(viewFloor);const def=CAT[gh.id];
   if(def.wall){let best=null,bd=40;for(const sl of wallSlots()){const[cx,cy]=slotCenter(sl);const d=Math.hypot(cx-sx,cy-sy);if(d<bd){bd=d;best=sl;}}gh.slot=best?best.k:null;}
-  else{const t=tileAt(sx,sy);const W=gh.r?def.d:def.w,D=gh.r?def.w:def.d;gh.tx=t[0]-Math.floor((W-1)/2);gh.ty=t[1]-Math.floor((D-1)/2);}
+  else{const t=tileAt(sx,sy);const W=gh.r%2?def.d:def.w,D=gh.r%2?def.w:def.d;gh.tx=t[0]-Math.floor((W-1)/2);gh.ty=t[1]-Math.floor((D-1)/2);}
   validateGhost();renderBuildBar();}
 function placeGhost(){const gh=build.ghost;if(!gh)return;validateGhost();if(!gh.ok){toast(build.why||'這裡放不下');return;}
   const def=CAT[gh.id];
@@ -2965,9 +2999,10 @@ function placeGhost(){const gh=build.ghost;if(!gh)return;validateGhost();if(!gh.
     state.placed.push(def.wall?{u:uidGen('p'),id:gh.id,slot:gh.slot,f:viewFloor}:{u:uidGen('p'),id:gh.id,tx:gh.tx,ty:gh.ty,r:gh.r,f:viewFloor});}
   const id=gh.id,again=!gh.move&&state.inv[id]>0;build.ghost=null;rebuild();toast('擺好了：'+def.name);
   if(again)pickGhost(id);saveSoon();renderBuildBar();renderBuild();}
-function rotateGhost(){const gh=build.ghost;if(gh&&!CAT[gh.id].wall){gh.r=1-gh.r;validateGhost();renderBuildBar();}}
+function rotateGhost(){const gh=build.ghost;if(gh&&!CAT[gh.id].wall){gh.r=((gh.r|0)+1)%4;validateGhost();renderBuildBar();}}
 function storeSel(){const p=state.placed.find(x=>x.u===build.sel);if(!p)return;state.placed=state.placed.filter(x=>x!==p);state.inv[p.id]=(state.inv[p.id]||0)+1;build.sel=null;rebuild();saveSoon();toast('已收回倉庫：'+CAT[p.id].name);renderBuildBar();renderBuild();}
-function rotateSel(){const p=state.placed.find(x=>x.u===build.sel);if(!p||CAT[p.id].wall)return;useFloor(viewFloor);const v=canPlace(p.id,p.tx,p.ty,1-p.r,p.u);if(!v.ok){toast('轉不過來：'+v.why);return;}p.r=1-p.r;rebuild();saveSoon();}
+function rotateSel(){const p=state.placed.find(x=>x.u===build.sel);if(!p||CAT[p.id].wall)return;useFloor(viewFloor);let nr=-1,why='';for(let k=1;k<4;k++){const c=((p.r|0)+k)%4;const v=canPlace(p.id,p.tx,p.ty,c,p.u);if(v.ok){nr=c;break;}if(!why)why=v.why;}
+  if(nr<0){toast('轉不過來：'+why);return;}if(nr!==((p.r|0)+1)%4)toast('轉 90° 會卡到東西，直接轉到 '+nr*90+'°');p.r=nr;rebuild();saveSoon();renderBuildBar();}
 function tileAt(sx,sy){const a=sx-BASE_OX,b=2*(sy-BASE_OY);return[Math.floor((a+b)/2/T),Math.floor((b-a)/2/T)];}
 function placedAt(sx,sy){
   useFloor(viewFloor);
@@ -2981,9 +3016,9 @@ function renderBuildBar(){const bb=$('#buildbar');if(!build.on){bb.hidden=true;r
   const gh=build.ghost;const add=(txt,fn,cls)=>{const b=document.createElement('button');b.type='button';b.className='btn'+(cls?' '+cls:'');b.textContent=txt;b.onclick=fn;bb.append(b);};
   if(gh){const s=document.createElement('span');s.textContent=(gh.move?'移動：':'擺放：')+CAT[gh.id].name+'（'+(viewFloor+1)+'F）';bb.append(s);
     if(build.why){const w=document.createElement('span');w.className='why';w.textContent=build.why;bb.append(w);}
-    if(!CAT[gh.id].wall)add('旋轉 (R)',rotateGhost);add('放這裡',placeGhost,'primary');add('取消',()=>{build.ghost=null;renderBuildBar();renderBuild();});}
+    if(!CAT[gh.id].wall)add('↻ 轉 90°（現在 '+((gh.r|0)*90)+'°）(R)',rotateGhost);add('放這裡',placeGhost,'primary');add('取消',()=>{build.ghost=null;renderBuildBar();renderBuild();});}
   else if(build.sel){const p=state.placed.find(x=>x.u===build.sel);if(!p){build.sel=null;return renderBuildBar();}const s=document.createElement('span');s.textContent='選取：'+CAT[p.id].name;bb.append(s);
-    add('移動',()=>pickGhost(p.id,p.u));if(!CAT[p.id].wall)add('旋轉',rotateSel);add('收回倉庫',storeSel);add('取消選取',()=>{build.sel=null;renderBuildBar();});}
+    add('移動',()=>pickGhost(p.id,p.u));if(!CAT[p.id].wall)add('↻ 轉 90°（現在 '+((p.r|0)*90)+'°）',rotateSel);add('收回倉庫',storeSel);add('取消選取',()=>{build.sel=null;renderBuildBar();});}
   else{const s=document.createElement('span');s.textContent='點右邊倉庫的家具來擺放，或點畫面上的家具來移動。用左邊的樓層按鈕換樓層。';bb.append(s);add('完成佈置',()=>setBuild(false),'primary');}}
 
 /* =========================================================
@@ -3050,7 +3085,7 @@ stage.addEventListener('wheel',e=>{e.preventDefault();camX+=e.deltaX*dpr/zoom*.6
 $('#zin').onclick=()=>stepZoom(1);$('#zout').onclick=()=>stepZoom(-1);$('#zfit').onclick=()=>{userMoved=false;fit();};
 $('#buildBtn').onclick=()=>setBuild(!build.on);
 window.addEventListener('resize',resize);
-document.addEventListener('keydown',e=>{if(e.target.matches('input,textarea,select'))return;if(build.on&&(e.key==='r'||e.key==='R'))rotateGhost();if(build.on&&e.key==='Escape'&&build.ghost){build.ghost=null;renderBuildBar();renderBuild();}});
+document.addEventListener('keydown',e=>{if(e.target.matches('input,textarea,select'))return;if(build.on&&(e.key==='r'||e.key==='R')){if(build.ghost)rotateGhost();else if(build.sel)rotateSel();}if(build.on&&e.key==='Escape'&&build.ghost){build.ghost=null;renderBuildBar();renderBuild();}});
 function setView(f){if(f===viewFloor||!WORLDS[f])return;viewFloor=f;build.ghost=null;build.sel=null;useFloor(f);drawStatic();renderFloors();renderBuildBar();if(curTab==='build')renderBuild();}
 function renderFloors(){const el=$('#floors');if(!el)return;el.innerHTML='';
   for(let f=WORLDS.length-1;f>=0;f--){const b=document.createElement('button');b.type='button';b.setAttribute('aria-pressed',String(f===viewFloor));
@@ -3066,21 +3101,23 @@ function guard(tag,fn){try{fn();return true;}catch(e){frameErr++;if(frameErr<=3|
 /* =========================================================
    Idle / background play
    ========================================================= */
-const SET={eco:false,wake:false,catchup:true,speed:1,pace:120,notify:false,notifyAt:21,lastNotify:null};
+const SET={eco:false,wake:false,catchup:true,speed:1,pace:120,emg:1,notify:false,notifyAt:21,lastNotify:null};
 const SET_KEY='habit-house-settings';
 function loadSettings(){try{Object.assign(SET,JSON.parse(localStorage.getItem(SET_KEY)||'{}'));}catch(e){}}
 function saveSettings(){try{localStorage.setItem(SET_KEY,JSON.stringify(SET));}catch(e){}}
 const CATCH_MAX_S=24*3600;
 let CATCHING=false;const CATCH={rem:0,total:0};const AWAY={sec:0,notes:[],startMin:null};
 let lastWall=Date.now(),hiddenAt=0,lastRender=0,lastFrameT=0;
+let EMG_NEXT=rand(150,300);
 function simStep(dt){
+  if(!CATCHING&&!document.hidden&&!EMG&&CATCH.rem<=0&&(SET.emg??1)>0){EMG_NEXT-=dt;if(EMG_NEXT<=0){EMG_NEXT=rand(600,1200)/(SET.emg||1);guard('emergency',emergencyTick);}}
   const dtG=dt*paceRate()*speed;gameMin+=dtG;
   for(const r of RES){if(!guard('resident',()=>updateResident(r,dt,dtG))){r.plan=[];r.step=null;r.state='idle';r.spot=null;r.path=[];r.wait=3;r.goF=null;}}
   for(const b of BABIES)guard('baby',()=>updateBaby(b,dt,dtG));
   for(const pt of PETS)guard('pet',()=>updatePet(pt,dt,dtG));
   guard('social',()=>socialTick(dt,dtG));
   guard('events',()=>{
-    const hr=Math.floor(gameMin/60);if(hr!==lastRelHour){if(lastRelHour>=0){relTick();if(Math.random()<.18)pairEvent();if(Math.random()<.03)emergencyTick();eventsHourly();letterTick();expireLetters();}lastRelHour=hr;}
+    const hr=Math.floor(gameMin/60);if(hr!==lastRelHour){if(lastRelHour>=0){relTick();if(Math.random()<.18)pairEvent();eventsHourly();letterTick();expireLetters();}lastRelHour=hr;}
     const dd=houseDay();if(dd!==lastHouseDay){if(lastHouseDay>=0)dayTick();lastHouseDay=dd;}
     if(EMG&&!document.hidden&&!CATCHING&&performance.now()>EMG.until){const msg=EMG.ignore();finishEmergency('⏰ 來不及處理：'+msg);}
     if(relDirty&&performance.now()-lastSaveAt>60000)saveNow();});
@@ -3131,6 +3168,9 @@ function releaseWake(){try{if(wakeLock)wakeLock.release();}catch(e){}wakeLock=nu
 function updateTitle(done,total){try{const left=total-done;document.title=(total&&left>0?'('+left+') ':'')+'習慣小屋';}catch(e){}}
 function initIdleUI(){
   const bind=(id,k,fn)=>{const e=document.getElementById(id);if(!e)return;e.checked=!!SET[k];e.onchange=()=>{SET[k]=e.checked;saveSettings();if(fn)fn();};};
+  const emgTxt={0:'不會發生緊急狀況',0.5:'大約每 20–40 分鐘一次（網頁開著時）',1:'大約每 10–20 分鐘一次（網頁開著時）',2:'大約每 5–10 分鐘一次（網頁開著時）'};
+  const setEmg=v=>{SET.emg=v;saveSettings();document.querySelectorAll('[data-emg]').forEach(x=>x.setAttribute('aria-pressed',String(+x.dataset.emg===v)));$('#emgInfo').textContent=emgTxt[v]||'';EMG_NEXT=Math.min(EMG_NEXT,v>0?rand(120,300)/v:EMG_NEXT);};
+  document.querySelectorAll('[data-emg]').forEach(x=>x.onclick=()=>setEmg(+x.dataset.emg));setEmg([0,.5,1,2].includes(SET.emg)?SET.emg:1);
   document.querySelectorAll('[data-feat]').forEach(b=>b.onclick=()=>openFeat(b.dataset.feat));
   const on=$('#optNotify'),na=$('#notifyAt');on.checked=!!SET.notify&&('Notification' in window)&&Notification.permission==='granted';na.value=String(SET.notifyAt||21);
   if(!('Notification' in window)){on.disabled=true;}
