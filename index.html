@@ -2729,24 +2729,73 @@ function talkAbout(r,o){const rel=relGet(r.id,o.id);const n=o.name;const cp=comp
   if(cp<0||rel.aff<15)return '老實說，我跟'+n+'個性不太合…';
   if(rel.stage>=2)return n+'人很好，我們常常一起玩。';
   return n+'？還不錯啦，'+(cp>0?'感覺我們會合得來。':'還不太熟。');}
+/* ---------- conversation memory: follow-up questions stay on topic ---------- */
+const SURPRISE_IDEAS=['親手做一個蛋糕','把房間佈置滿滿的氣球','寫一封很長很長的信','準備一頓燭光晚餐','偷偷買'+'{O}想要很久的東西','錄一段影片，把我們的回憶剪在一起','安排一趟兩天一夜的小旅行'];
+const ANNOY_DETAIL=['講話好大聲，我在看書都聽得到','吃完東西都不收碗','洗澡洗超久，害我每次都要排隊','半夜還在打電動','總是把我的東西亂放','借了東西都不還'];
+const RING_STYLE=['簡單的銀戒指，上面刻了我們的名字','有一顆小小的鑽石','跟我們第一次約會那天的天空一樣的藍寶石','我自己設計的'];
+const TOPICS={
+  surprise:{what:d=>['我想要'+d.idea+'！'+d.when+'給'+d.o+'。','就是…'+d.idea+'啦！'],why:d=>['因為'+d.o+'最近好像有點累，想讓'+d.he+'開心一下。','我們在一起很久了，想好好慶祝一下！'],
+    more:d=>['你一定要幫我保密喔！','要是被'+d.o+'發現就完了…','你覺得'+d.o+'會喜歡嗎？'],yes:d=>['謝謝你！有你幫我保密真好～','嘿嘿，那就這麼說定了，到時候再跟你說結果！'],no:d=>['欸…那我再想想別的點子好了。'],fx:(r,d,a)=>{if(a==='yes'&&d.oid)relAdd(r.id,d.oid,3);}},
+  crush:{what:d=>['就是…'+d.o+'笑起來很好看…','每次'+d.o+'跟我說話，我都會心跳加速…'],why:d=>[d.o+'對大家都很溫柔，可是對我好像特別好…','我也不知道為什麼，就是一直會想到'+d.he+'。'],
+    more:d=>['你覺得'+d.o+'會喜歡我嗎？','我該不該跟'+d.he+'說呢…','你不可以跟'+d.o+'說喔！'],yes:d=>['好…我會找機會鼓起勇氣的！','嗯！謝謝你給我勇氣！'],no:d=>['你說得對…我再觀察一下好了。','嗚…好吧。'],fx:(r,d,a)=>{if(a==='yes'&&d.oid)relAdd(r.id,d.oid,4);}},
+  annoy:{what:d=>['就是'+d.detail+'啦，講了好幾次都不改。'],why:d=>['我們個性真的差很多…'+d.o+'很隨性，我比較在意細節。','可能是我太敏感了吧…可是真的很煩。'],
+    more:d=>['你可以幫我跟'+d.he+'說嗎？…算了，我自己來。','你不會跟'+d.o+'說吧？'],yes:d=>['好吧…我試著好好跟'+d.he+'說說看。','嗯，我會試著包容一點。'],no:d=>['哼，反正我就是不想理'+d.he+'。'],fx:(r,d,a)=>{if(a==='yes'&&d.oid)relAdd(r.id,d.oid,3);}},
+  ring:{what:d=>['戒指是'+d.style+'！存了好久的錢呢。'],why:d=>['因為我想跟'+d.o+'過一輩子。','跟'+d.o+'在一起的每一天，我都覺得好幸福。'],
+    more:d=>['你覺得在哪裡求婚比較好？','我好緊張，萬一'+d.he+'說不要怎麼辦…'],yes:d=>['好！我決定了，下次約會就說！','謝謝你，我比較不緊張了！'],no:d=>['嗯…那我再等等好了。'],fx:(r,d,a)=>{if(a==='yes'&&d.oid)relAdd(r.id,d.oid,3);}},
+  person:{what:d=>[d.line2],why:d=>[d.why],more:d=>['你怎麼突然問起'+d.o+'？','你跟'+d.o+'也很熟嗎？'],yes:d=>['嗯嗯！'],no:d=>['好啦好啦。']},
+  home:{what:d=>[d.c.food+'真的超好吃！我好想念家鄉的味道。','我在'+d.c.n+'長大，那邊的'+d.c.food+'是全世界最好吃的！'],why:d=>['因為那是媽媽常常做給我吃的…','因為吃到家鄉菜就會覺得很安心。'],
+    more:d=>['下次我煮給你吃好不好？','你有去過'+d.c.n+'嗎？','在家鄉的時候，我們會說「'+d.c.hi+'」來打招呼喔！'],yes:d=>['好耶！那就說定了！'],no:d=>['好吧…那我自己吃。']},
+  job:{what:d=>['我是'+d.j.name+'，'+jobDesc(d.j)+'。','工作內容嘛…'+(d.j.place?'在'+d.j.place+'做事，':'在家接案，')+'有時候很忙，有時候很閒。'],why:d=>['一開始是為了賺錢啦，現在覺得還蠻有成就感的。','因為我喜歡這種工作的感覺！'],
+    more:d=>['今天'+(d.tired?'真的好累…':'還算順利！'),'存款現在有 '+d.money+' 元，我在努力存錢！'],yes:d=>['謝謝你！我會繼續加油！'],no:d=>['嗯…我再想想。']},
+  dream:{what:d=>['我的夢想是「'+d.name+'」！','我想要'+d.name+'，現在完成了大概 '+d.pct+'%。'],why:d=>['因為這是我從小就想做的事！','想證明自己做得到。'],
+    more:d=>['你會支持我嗎？','如果你有空，可以在我的頁面幫我一把喔！'],yes:d=>['謝謝你支持我！我會更努力的！'],no:d=>['…好吧，我自己加油。']},
+  secret:{what:d=>['就是我剛剛說的…'+d.text.replace(/[。！？!]+$/,'')+'。','嗯…說出來有點不好意思啦。'],why:d=>['我也不知道，就是這樣嘛…','因為…一直不敢跟別人說。'],more:d=>['你不會笑我吧？','你要幫我保密喔！'],yes:d=>['謝謝你，跟你說完輕鬆多了。'],no:d=>['…你這樣我會很受傷耶。']}
+};
+function setTopic(r,kind,data){r.topic={kind,data:data||{},used:{},at:performance.now()/1000,teased:false};}
+function followKind(m){
+  if(/^(不要|不行|算了|不好|別|不可以|才不|沒興趣)/.test(m)||/不要啦|不想|不支持|不會幫/.test(m))return 'no';
+  if(/為什麼|為何|怎麼會|幹嘛|原因|為啥/.test(m))return 'why';
+  if(/什麼|啥|哪|怎樣|怎麼|誰|多少|幾|細節|內容|是指|意思/.test(m))return 'what';
+  if(/^(好|可以|ok|OK|嗯嗯|沒問題|當然|一定|放心)|保密|不會說|不會講|支持你|加油|去吧|告白|勇敢|答應|我幫你|好喔|好啊|好的/.test(m))return 'yes';
+  if(/說啊|快說|說嘛|說說|然後|後來|還有|繼續|講|告訴我|真的|^嗯|^喔|^哦|是喔|蛤|^欸|[?？]|嗎$|呢$/.test(m)||m.length<=3)return 'more';
+  return null;}
+function followUp(r,m){const t=r.topic;if(!t||performance.now()/1000-t.at>300)return null;const T=TOPICS[t.kind];if(!T)return null;
+  const h=habitById(r.id);const P=persOf(h);let q=followKind(m);if(!q)return null;
+  if(q==='more'&&!t.used.what)q='what';
+  if((q==='what'||q==='more')&&P.has('tsun')&&!t.teased&&Math.random()<.6){t.teased=true;t.at=performance.now()/1000;return{reply:tone(h,'才、才不告訴你咧！…你真的想知道？'),emotion:'shy',fav:0,action:'none'};}
+  if((q==='what'||q==='more')&&P.has('shy')&&!t.teased&&Math.random()<.5){t.teased=true;t.at=performance.now()/1000;return{reply:'那、那個…你真的想聽嗎…',emotion:'shy',fav:0,action:'none'};}
+  const order=q==='yes'||q==='no'?[q]:q==='why'?['why','more','what']:q==='what'?['what','more','why']:['more','what','why'];
+  for(const k of order){const lines=(T[k]?T[k](t.data):[]).filter(Boolean);const free=lines.filter((x,i)=>!(t.used[k]||[]).includes(i));if(!free.length&&k!=='yes'&&k!=='no')continue;
+    const pickLine=free.length?free[0]:choice(lines);const idx=lines.indexOf(pickLine);(t.used[k]=t.used[k]||[]).push(idx);t.at=performance.now()/1000;
+    if(T.fx&&(k==='yes'||k==='no'))T.fx(r,t.data,k);if(k==='yes'||k==='no')r.topic=null;
+    const P0=persOf(h);const said=Math.random()<.25?(Math.random()<.5?choice(P0.pre)+pickLine:pickLine.replace(/[。！!～]+$/,'')+choice(P0.suf)):pickLine;
+    return{reply:said,emotion:k==='no'?'sad':t.kind==='crush'||t.kind==='ring'||t.kind==='surprise'?'shy':'happy',fav:k==='yes'?2:k==='no'?-1:1,action:'none'};}
+  r.topic=null;return{reply:tone(h,'就這樣啦～謝謝你聽我說。'),emotion:'happy',fav:1,action:'none'};}
+
 function genSecret(r){
   const h=habitById(r.id);const P=persOf(h);const pool=[];
-  for(const o of RES){if(o===r)continue;const rel=relGet(r.id,o.id);const cp=compat(h,habitById(o.id));
-    if(rel.stage>=3&&rel.stage<=4&&rel.chem>=.35)pool.push('其實…我好像喜歡上'+o.name+'了。你千萬不要說出去！');
-    if(rel.aff<20||cp<0)pool.push('偷偷跟你說，我有點受不了'+o.name+'…'+choice(['講話好大聲。','都不收碗。','個性真的跟我不合。']));
-    if(rel.stage===7)pool.push('我在計畫給'+o.name+'一個驚喜，噓！');
-    if(rel.stage>=5&&rel.stage<7)pool.push('我其實已經偷偷買好戒指了…還在等時機跟'+o.name+'求婚。');}
-  pool.push(...P.secrets,...QUIRKS,'其實我昨天差點放棄「'+h.name+'」，還好有你。');
-  const fresh=pool.filter(s=>!(h.secrets||[]).includes(s));return choice(fresh.length?fresh:pool);
+  for(const o of RES){if(o===r)continue;const rel=relGet(r.id,o.id);const cp=compat(h,habitById(o.id));const oh=habitById(o.id);const he=oh&&oh.gender==='m'?'他':'她';const base={o:o.name,oid:o.id,he};
+    if(rel.stage>=3&&rel.stage<=4&&rel.chem>=.35)pool.push({text:'其實…我好像喜歡上'+o.name+'了。你千萬不要說出去！',kind:'crush',data:base});
+    if(rel.aff<20||cp<0){const detail=choice(ANNOY_DETAIL);pool.push({text:'偷偷跟你說，我有點受不了'+o.name+'…'+detail.split('，')[0]+'。',kind:'annoy',data:Object.assign({detail},base)});}
+    if(rel.stage===7){const idea=choice(SURPRISE_IDEAS).replace('{O}',o.name);pool.push({text:'我在計畫給'+o.name+'一個驚喜，噓！',kind:'surprise',data:Object.assign({idea,when:choice(['下週末','等'+he+'下班回家的時候','我們的紀念日那天'])},base)});}
+    if(rel.stage>=5&&rel.stage<7)pool.push({text:'我其實已經偷偷買好戒指了…還在等時機跟'+o.name+'求婚。',kind:'ring',data:Object.assign({style:choice(RING_STYLE)},base)});}
+  for(const t of[...P.secrets,...QUIRKS,'其實我昨天差點放棄「'+h.name+'」，還好有你。'])pool.push({text:t,kind:'secret',data:{text:t}});
+  const fresh=pool.filter(x=>!(h.secrets||[]).includes(x.text));return choice(fresh.length?fresh:pool);
 }
-function tellSecret(r){const h=habitById(r.id);const s=genSecret(r);h.secrets=h.secrets||[];if(!h.secrets.includes(s))h.secrets.push(s);if(h.secrets.length>30)h.secrets.shift();
+function tellSecret(r){const h=habitById(r.id);const sec=genSecret(r);const s=sec.text;setTopic(r,sec.kind,sec.data);h.secrets=h.secrets||[];if(!h.secrets.includes(s))h.secrets.push(s);if(h.secrets.length>30)h.secrets.shift();
   r.secretReady=false;r.say={text:'（小聲）'+s,until:performance.now()/1000+7};pushChat(h,'secret',s);setPemo(r,'shy',8);if(r.id===selected)showVN(r,'（小聲）'+s);showBub(r,'whisper',3);h.fav=clamp(h.fav+1,0,100);saveSoon();}
 function ruleReply(r,msg){
   const h=habitById(r.id),n=r.needs,m=msg.trim();const has=re=>re.test(m);const P=persOf(h);
   const T_=t=>tone(h,t);
   if(!isActive(h)&&!has(/打卡|加油/))return{reply:choice(['嗯…','我現在沒什麼心情…','幫我打卡好嗎…']),emotion:'sad',fav:0,action:'none'};
   if(has(/笨|爛|討厭你|醜|滾|閉嘴|白癡|廢物|好煩|垃圾|去死|蠢/))return{reply:P.lines.insult,emotion:P.temper>.5?'angry':'sad',fav:-6,action:'none'};
-  const others=RES.filter(x=>x!==r&&m.includes(x.name));if(others.length)return{reply:T_(talkAbout(r,others[0])),emotion:relGet(r.id,others[0].id).stage>=4?'shy':'happy',fav:1,action:'none'};
+  {const tp=r.topic;const named=RES.filter(x=>x!==r&&m.includes(x.name));if(tp&&(!named.length||named.some(x=>x.id===tp.data.oid))){const f=followUp(r,m);if(f)return f;}}
+  if(has(/工作|上班|職業|薪水|公司/)){const j=jobOf(h);setTopic(r,'job',{j,tired:n.energy<40,money:h.money||0});return{reply:T_(j.days.length?'我現在是'+j.name+'喔！':'我現在還在找工作…'),emotion:'happy',fav:1,action:'none'};}
+  if(has(/夢想|目標|願望|想做什麼/)){const d=dreamOf(h);if(d){setTopic(r,'dream',{name:DREAMS[d.id].name,pct:Math.round(dreamProg(h)*100)});return{reply:T_('我有一個夢想喔！'),emotion:'happy',fav:2,action:'none'};}}
+  if(has(/家鄉|國家|故鄉|老家|哪裡人|來自/)){const CO=countryOf(h);setTopic(r,'home',{c:CO});return{reply:T_('我來自'+CO.flag+CO.n+'！'),emotion:'happy',fav:2,action:'none'};}
+  const others=RES.filter(x=>x!==r&&m.includes(x.name));if(others.length){const o=others[0];const rel0=relGet(r.id,o.id);const oh=habitById(o.id);const he=oh&&oh.gender==='m'?'他':'她';
+    setTopic(r,'person',{o:o.name,oid:o.id,he,line2:rel0.stage>=5?'我們最近常常一起'+choice(['看電影','散步','吃宵夜'])+'，'+he+'對我很好。':rel0.aff<20?he+'有時候真的讓我很無言…':'我們會一起'+choice(['聊天','看電視','打電動','喝下午茶'])+'。',why:rel0.stage>=4?'因為…跟'+he+'在一起很安心啦。':compat(h,oh)<0?'大概是個性不合吧。':'因為'+he+'人很好呀。'});
+    return{reply:T_(talkAbout(r,o)),emotion:relGet(r.id,others[0].id).stage>=4?'shy':'happy',fav:1,action:'none'};}
   if(has(/廁所|尿|大便|便便|小便|拉屎/))return n.bladder>30?{reply:T_('欸！這種事不要問啦…好啦我去一下。'),emotion:'shy',fav:0,action:'toilet'}:{reply:T_('我現在不用去啦！'),emotion:'shy',fav:0,action:'none'};
   if(has(/洗澡|臭|髒|泡澡|沖澡/))return n.hygiene<75?{reply:T_('好啦好啦，我去洗香香！'),emotion:'shy',fav:0,action:'wash'}:{reply:T_('我剛洗過很香好嗎！'),emotion:'angry',fav:-1,action:'none'};
   if(has(/餓|吃|飯|點心|食物|晚餐|午餐|早餐/))return n.hunger<65?{reply:T_('對啊肚子餓了，我去煮點東西！'),emotion:'happy',fav:1,action:'eat'}:{reply:T_('我還很飽～等等再吃。'),emotion:'neutral',fav:1,action:'none'};
@@ -2754,8 +2803,8 @@ function ruleReply(r,msg){
   if(has(/喝水|喝杯|口渴|渴/))return{reply:T_('好，我去喝杯水！'),emotion:'happy',fav:1,action:'drink'};
   if(has(/電視|看劇|節目|追劇/))return{reply:T_('好啊！我去看電視～'),emotion:'happy',fav:1,action:'tv'};
   if(has(/運動|跑步|健身/))return{reply:T_(n.energy>35?'好！動一動！':'我現在好累，等等再說…'),emotion:n.energy>35?'happy':'sad',fav:1,action:n.energy>35?'exercise':'none'};
-  if(has(/結婚|交往|男朋友|女朋友|喜歡誰|對象|戀愛|約會|暗戀/)){const pid=partnerOf(r.id);if(pid)return{reply:T_('我和'+nameOf(pid)+'…（臉紅）你知道就好！'),emotion:'shy',fav:2,action:'none'};
-    const best=RES.filter(x=>x!==r).map(x=>[x,relGet(r.id,x.id)]).sort((a,b)=>b[1].aff-a[1].aff)[0];return{reply:T_(best&&best[1].aff>40?'其實…我覺得'+best[0].name+'人蠻好的…':'我現在還沒有喜歡的人啦！'),emotion:'shy',fav:2,action:'none'};}
+  if(has(/結婚|交往|男朋友|女朋友|喜歡誰|對象|戀愛|約會|暗戀/)){const pid=partnerOf(r.id);if(pid){const ph=habitById(pid);setTopic(r,'person',{o:nameOf(pid),oid:pid,he:ph&&ph.gender==='m'?'他':'她',line2:'我們會一起散步、一起煮飯，很普通但很幸福。',why:'因為跟'+nameOf(pid)+'在一起很安心呀。'});return{reply:T_('我和'+nameOf(pid)+'…（臉紅）你知道就好！'),emotion:'shy',fav:2,action:'none'};}
+    const best=RES.filter(x=>x!==r).map(x=>[x,relGet(r.id,x.id)]).sort((a,b)=>b[1].aff-a[1].aff)[0];if(best&&best[1].aff>40){const bh=habitById(best[0].id);setTopic(r,'crush',{o:best[0].name,oid:best[0].id,he:bh&&bh.gender==='m'?'他':'她'});}return{reply:T_(best&&best[1].aff>40?'其實…我覺得'+best[0].name+'人蠻好的…':'我現在還沒有喜歡的人啦！'),emotion:'shy',fav:2,action:'none'};}
   if(has(/心情|還好嗎|怎麼了|開心嗎|好嗎|狀態/)){const w=[];if(r.sick>gameMin)w.push('在生病');if(n.hunger<35)w.push('有點餓');if(n.energy<30)w.push('有點累');if(n.bladder>70)w.push('想上廁所');if(n.hygiene<35)w.push('想洗澡');
     return{reply:T_(w.length?'我現在'+w.join('、')+'…':n.mood>70?'超開心的！謝謝你關心我。':'還不錯啦～'),emotion:w.length?'sad':'happy',fav:2,action:'none'};}
   if(has(/喜歡你|愛你|最棒|好可愛|好帥|好美|漂亮|帥氣/))return{reply:P.lines.praise,emotion:'shy',fav:4,action:'none'};
@@ -2764,7 +2813,8 @@ function ruleReply(r,msg){
   if(has(/打卡|習慣|今天/))return{reply:T_(isChecked(h,today())?'今天的「'+h.name+'」已經完成啦！':'今天的「'+h.name+'」還沒做…我們一起努力吧！'),emotion:'happy',fav:1,action:'none'};
   if(has(/禮物/))return{reply:T_('禮物？！是要送我的嗎？好期待～'),emotion:'happy',fav:1,action:'none'};
   if(has(/個性|你是怎樣的人|自我介紹/))return{reply:T_('我是'+P.name+'的'+h.res.name+'。'+P.desc),emotion:'happy',fav:1,action:'none'};
-  if(has(/[?？]|嗎/))return{reply:T_(choice(['嗯…這個問題好難，我想想看。','你猜猜看～','這個嘛…秘密！'])),emotion:'neutral',fav:1,action:'none'};
+  if(has(/[?？]|嗎/)){const last=(h.chat||[]).filter(c=>c.who==='them'||c.who==='secret').slice(-1)[0];if(last&&followKind(m)&&last.text.length>6)return{reply:T_('我是說「'+last.text.replace(/^（小聲）/,'').slice(0,22)+'」啦，你有在聽嗎～'),emotion:'neutral',fav:0,action:'none'};
+    return{reply:T_(choice(['嗯…這個問題好難，我想想看。','你猜猜看～','這個嘛…秘密！'])),emotion:'neutral',fav:1,action:'none'};}
   return{reply:Math.random()<.5?choice(P.lines.fill):T_(choice(['哈哈，你好有趣！','原來如此～','嗯嗯，我懂！','真的嗎？','謝謝你陪我聊天～',...(HABIT_LINES[r.sig]||[])])),emotion:'happy',fav:1,action:'none'};
 }
 async function aiReply(r,msg){
