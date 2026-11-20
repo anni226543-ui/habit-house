@@ -644,7 +644,7 @@ function bedP(P,o,pr){const fw=pr?'#f6eef3':'#8b6142',bc=pr?'#f59ac0':(o.blanket
 function dbedP(P,o){const fw='#8b6142',bc=o.blanket||'#e86e6e';
   P.sh(1,1,46,46);P.box(1,1,0,46,46,6,fw);P.box(1,0,0,46,3,18,fw);P.front(3,4,44,8,16,S(fw,1.15));P.box(22,0,18,4,3,4,fw);
   P.box(2,3,6,44,43,4,'#f4f2ee');P.box(5,4,10,15,8,3,'#ffffff');P.box(28,4,10,15,8,3,'#ffffff');
-  const u0=o.spots[0]&&o.spots[0].using,u1=o.spots[1]&&o.spots[1].using;
+  const sp=o.spots||[];const u0=sp[0]&&sp[0].using,u1=sp[1]&&sp[1].using;
   if(!u0)P.box(2,15,10,22,31,2,bc);if(!u1)P.box(24,15,10,22,31,2,bc);P.top(12,2,46,15,17,S(bc,1.25));
   for(const[a,b]of[[1,44],[45,44]])P.box(a,b,0,2,2,3,S(fw,.7));}
 const RUGS=[['#d27b62','#a9503c'],['#7d9bc9','#4c6a9a'],['#9bc58a','#5f8a4f'],['#e8b4d0','#c27a9f'],['#f2cf6b','#c99a2e']];
@@ -3001,8 +3001,13 @@ function placeGhost(){const gh=build.ghost;if(!gh)return;validateGhost();if(!gh.
   if(again)pickGhost(id);saveSoon();renderBuildBar();renderBuild();}
 function rotateGhost(){const gh=build.ghost;if(gh&&!CAT[gh.id].wall){gh.r=((gh.r|0)+1)%4;validateGhost();renderBuildBar();}}
 function storeSel(){const p=state.placed.find(x=>x.u===build.sel);if(!p)return;state.placed=state.placed.filter(x=>x!==p);state.inv[p.id]=(state.inv[p.id]||0)+1;build.sel=null;rebuild();saveSoon();toast('已收回倉庫：'+CAT[p.id].name);renderBuildBar();renderBuild();}
-function rotateSel(){const p=state.placed.find(x=>x.u===build.sel);if(!p||CAT[p.id].wall)return;useFloor(viewFloor);let nr=-1,why='';for(let k=1;k<4;k++){const c=((p.r|0)+k)%4;const v=canPlace(p.id,p.tx,p.ty,c,p.u);if(v.ok){nr=c;break;}if(!why)why=v.why;}
-  if(nr<0){toast('轉不過來：'+why);return;}if(nr!==((p.r|0)+1)%4)toast('轉 90° 會卡到東西，直接轉到 '+nr*90+'°');p.r=nr;rebuild();saveSoon();renderBuildBar();}
+function rotateSel(){const p=state.placed.find(x=>x.u===build.sel);if(!p||CAT[p.id].wall)return;useFloor(viewFloor);const def=CAT[p.id];
+  const dims=r=>r%2?[def.d,def.w]:[def.w,def.d];const[ow,od]=dims(p.r|0);const cx=p.tx+ow/2,cy=p.ty+od/2;let found=null,why='';
+  for(let k=1;k<4&&!found;k++){const nr=((p.r|0)+k)%4;const[nw,nd]=dims(nr);const bx=Math.round(cx-nw/2),by=Math.round(cy-nd/2);
+    const offs=[[0,0]];for(let rad=1;rad<=2;rad++)for(let dy=-rad;dy<=rad;dy++)for(let dx=-rad;dx<=rad;dx++)if(Math.max(Math.abs(dx),Math.abs(dy))===rad)offs.push([dx,dy]);
+    for(const[dx,dy]of offs){const v=canPlace(p.id,bx+dx,by+dy,nr,p.u);if(v.ok){found=[nr,bx+dx,by+dy];break;}if(!why)why=v.why;}}
+  if(!found){toast('這個位置轉不過來（'+why+'），先移到空一點的地方再轉');return;}
+  const[nr,nx,ny]=found;const want=((p.r|0)+1)%4;if(nr!==want)toast('轉 90° 放不下，直接轉到 '+nr*90+'°');p.r=nr;p.tx=nx;p.ty=ny;rebuild();saveSoon();renderBuildBar();}
 function tileAt(sx,sy){const a=sx-BASE_OX,b=2*(sy-BASE_OY);return[Math.floor((a+b)/2/T),Math.floor((b-a)/2/T)];}
 function placedAt(sx,sy){
   useFloor(viewFloor);
