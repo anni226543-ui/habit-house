@@ -587,28 +587,28 @@ const NAMES={f:['小雨','莓莓','豆花','小桃','米米','安安','芊芊','
   m:['阿樹','小麥','阿柴','大熊','小凱','阿哲','浩浩','小宇','阿翔','丸子','布丁','阿光','小虎','阿默','飯糰','栗子']};
 /* home countries: names, greetings and home food (looks stay fully random & editable) */
 const COUNTRIES={
-  tw:{n:'台灣',flag:'🇹🇼',hi:'哈囉！',food:'珍珠奶茶和鹹酥雞',f:null,m:null,skin:[1,2,3,4]},
-  jp:{n:'日本',flag:'🇯🇵',hi:'こんにちは！',food:'拉麵',f:['櫻','美咲','陽菜','結衣','葵','凜'],m:['翔太','蓮','大和','悠真','拓海','陸'],skin:[0,1,2,3]},
-  kr:{n:'韓國',flag:'🇰🇷',hi:'안녕하세요！',food:'韓式炸雞',f:['智恩','秀妍','敏智','夏妍','瑞希','多賢'],m:['俊浩','敏俊','志勳','在賢','泰亨','賢宇'],skin:[0,1,2]},
-  us:{n:'美國',flag:'🇺🇸',hi:'Hello!',food:'漢堡和蘋果派',f:['艾蜜莉','莎拉','凱蒂','潔西卡','艾比'],m:['傑克','麥克','泰勒','諾亞','卡特'],skin:[0,1,2,3,4,5,6,7,8]},
-  gb:{n:'英國',flag:'🇬🇧',hi:'Cheers!',food:'炸魚薯條和下午茶',f:['艾莉絲','蘿西','愛瑪','佛蘿'],m:['哈利','奧利佛','喬治','亞瑟'],skin:[0,1,2,4,6,7]},
-  fr:{n:'法國',flag:'🇫🇷',hi:'Bonjour！',food:'可頌和馬卡龍',f:['克蘿伊','蕾雅','瑪儂','卡蜜兒'],m:['路易','雨果','朱利安','加百列'],skin:[0,1,2,5,7]},
-  it:{n:'義大利',flag:'🇮🇹',hi:'Ciao！',food:'披薩和提拉米蘇',f:['茱莉亞','索菲亞','琪亞拉'],m:['馬可','羅倫佐','里奧'],skin:[1,2,3]},
-  es:{n:'西班牙',flag:'🇪🇸',hi:'¡Hola!',food:'西班牙海鮮飯',f:['露西亞','卡門','瑪莉亞'],m:['哈維','帕布羅','亞歷'],skin:[1,2,3,4]},
-  de:{n:'德國',flag:'🇩🇪',hi:'Hallo！',food:'德國香腸和扭結麵包',f:['漢娜','蕾娜','米雅'],m:['盧卡斯','菲利克斯','班恩'],skin:[0,1,2]},
-  se:{n:'瑞典',flag:'🇸🇪',hi:'Hej！',food:'瑞典肉丸',f:['艾莎','阿格妮絲','麗芙'],m:['埃里克','奧斯卡','阿克塞'],skin:[0,1]},
-  ru:{n:'俄羅斯',flag:'🇷🇺',hi:'Привет！',food:'羅宋湯',f:['娜塔莎','安娜','奧爾嘉'],m:['伊凡','德米崔','阿列克謝'],skin:[0,1,2]},
-  br:{n:'巴西',flag:'🇧🇷',hi:'Olá！',food:'巴西窯烤',f:['卡蜜拉','碧翠絲','拉拉','茱莉安娜'],m:['迪亞哥','拉斐爾','加布','提亞戈'],skin:[1,2,3,4,5,6,7,8]},
-  mx:{n:'墨西哥',flag:'🇲🇽',hi:'¡Hola!',food:'塔可餅',f:['瓦倫蒂娜','伊莎貝拉','羅莎'],m:['卡洛斯','米格爾','安東尼奧'],skin:[2,3,4,5,6]},
-  in:{n:'印度',flag:'🇮🇳',hi:'Namaste！',food:'咖哩和烤餅',f:['普莉雅','安雅','蜜拉','狄雅'],m:['阿爾瓊','拉吉','維克拉姆','羅翰'],skin:[3,4,5,6,7]},
-  th:{n:'泰國',flag:'🇹🇭',hi:'สวัสดี！',food:'打拋豬',f:['普蘭','娜塔','琪琪'],m:['頌猜','阿南','提拉'],skin:[2,3,4,5]},
-  vn:{n:'越南',flag:'🇻🇳',hi:'Xin chào！',food:'河粉',f:['阿蓮','玉蘭','秋河'],m:['阿明','文勇','德輝'],skin:[2,3,4]},
-  ph:{n:'菲律賓',flag:'🇵🇭',hi:'Kumusta！',food:'芒果乾和烤乳豬',f:['瑪莉','安琪拉','蓓拉'],m:['丹尼','拉蒙','凱文'],skin:[3,4,5]},
-  ng:{n:'奈及利亞',flag:'🇳🇬',hi:'Bawo ni！',food:'加羅夫飯',f:['阿瑪拉','琪歐瑪','阿達'],m:['奇內杜','埃梅卡','圖恩德'],skin:[6,7,8]},
-  ke:{n:'肯亞',flag:'🇰🇪',hi:'Jambo！',food:'烤肉和玉米糕',f:['阿米娜','旺吉露','娜莉'],m:['卡馬烏','基普','奧馬'],skin:[6,7,8]},
-  eg:{n:'埃及',flag:'🇪🇬',hi:'Ahlan！',food:'庫莎莉',f:['雅絲敏','法蒂瑪','萊拉'],m:['歐瑪','卡里姆','優素福'],skin:[3,4,5,6]},
-  au:{n:'澳洲',flag:'🇦🇺',hi:"G'day！",food:'肉派和袋鼠造型餅乾',f:['米亞','潔絲','露比'],m:['庫柏','伊森','萊恩'],skin:[0,1,2,4,6,8]},
-  ca:{n:'加拿大',flag:'🇨🇦',hi:'Hello, eh!',food:'楓糖鬆餅',f:['艾娃','莉莉','克萊兒'],m:['連恩','柯爾','馬修'],skin:[0,1,2,3,5,7]}
+  tw:{reg:'ea',n:'台灣',flag:'🇹🇼',hi:'哈囉！',food:'珍珠奶茶和鹹酥雞',f:null,m:null,skin:[1,2,3,4]},
+  jp:{reg:'ea',n:'日本',flag:'🇯🇵',hi:'こんにちは！',food:'拉麵',f:['櫻','美咲','陽菜','結衣','葵','凜'],m:['翔太','蓮','大和','悠真','拓海','陸'],skin:[0,1,2,3]},
+  kr:{reg:'ea',n:'韓國',flag:'🇰🇷',hi:'안녕하세요！',food:'韓式炸雞',f:['智恩','秀妍','敏智','夏妍','瑞希','多賢'],m:['俊浩','敏俊','志勳','在賢','泰亨','賢宇'],skin:[0,1,2]},
+  us:{reg:'eu',n:'美國',flag:'🇺🇸',hi:'Hello!',food:'漢堡和蘋果派',f:['艾蜜莉','莎拉','凱蒂','潔西卡','艾比'],m:['傑克','麥克','泰勒','諾亞','卡特'],skin:[0,1,2,3,4,5,6,7,8]},
+  gb:{reg:'eu',n:'英國',flag:'🇬🇧',hi:'Cheers!',food:'炸魚薯條和下午茶',f:['艾莉絲','蘿西','愛瑪','佛蘿'],m:['哈利','奧利佛','喬治','亞瑟'],skin:[0,1,2,4,6,7]},
+  fr:{reg:'eu',n:'法國',flag:'🇫🇷',hi:'Bonjour！',food:'可頌和馬卡龍',f:['克蘿伊','蕾雅','瑪儂','卡蜜兒'],m:['路易','雨果','朱利安','加百列'],skin:[0,1,2,5,7]},
+  it:{reg:'eu',n:'義大利',flag:'🇮🇹',hi:'Ciao！',food:'披薩和提拉米蘇',f:['茱莉亞','索菲亞','琪亞拉'],m:['馬可','羅倫佐','里奧'],skin:[1,2,3]},
+  es:{reg:'eu',n:'西班牙',flag:'🇪🇸',hi:'¡Hola!',food:'西班牙海鮮飯',f:['露西亞','卡門','瑪莉亞'],m:['哈維','帕布羅','亞歷'],skin:[1,2,3,4]},
+  de:{reg:'eu',n:'德國',flag:'🇩🇪',hi:'Hallo！',food:'德國香腸和扭結麵包',f:['漢娜','蕾娜','米雅'],m:['盧卡斯','菲利克斯','班恩'],skin:[0,1,2]},
+  se:{reg:'eu',n:'瑞典',flag:'🇸🇪',hi:'Hej！',food:'瑞典肉丸',f:['艾莎','阿格妮絲','麗芙'],m:['埃里克','奧斯卡','阿克塞'],skin:[0,1]},
+  ru:{reg:'eu',n:'俄羅斯',flag:'🇷🇺',hi:'Привет！',food:'羅宋湯',f:['娜塔莎','安娜','奧爾嘉'],m:['伊凡','德米崔','阿列克謝'],skin:[0,1,2]},
+  br:{reg:'la',n:'巴西',flag:'🇧🇷',hi:'Olá！',food:'巴西窯烤',f:['卡蜜拉','碧翠絲','拉拉','茱莉安娜'],m:['迪亞哥','拉斐爾','加布','提亞戈'],skin:[1,2,3,4,5,6,7,8]},
+  mx:{reg:'la',n:'墨西哥',flag:'🇲🇽',hi:'¡Hola!',food:'塔可餅',f:['瓦倫蒂娜','伊莎貝拉','羅莎'],m:['卡洛斯','米格爾','安東尼奧'],skin:[2,3,4,5,6]},
+  in:{reg:'sa',n:'印度',flag:'🇮🇳',hi:'Namaste！',food:'咖哩和烤餅',f:['普莉雅','安雅','蜜拉','狄雅'],m:['阿爾瓊','拉吉','維克拉姆','羅翰'],skin:[3,4,5,6,7]},
+  th:{reg:'sea',n:'泰國',flag:'🇹🇭',hi:'สวัสดี！',food:'打拋豬',f:['普蘭','娜塔','琪琪'],m:['頌猜','阿南','提拉'],skin:[2,3,4,5]},
+  vn:{reg:'sea',n:'越南',flag:'🇻🇳',hi:'Xin chào！',food:'河粉',f:['阿蓮','玉蘭','秋河'],m:['阿明','文勇','德輝'],skin:[2,3,4]},
+  ph:{reg:'sea',n:'菲律賓',flag:'🇵🇭',hi:'Kumusta！',food:'芒果乾和烤乳豬',f:['瑪莉','安琪拉','蓓拉'],m:['丹尼','拉蒙','凱文'],skin:[3,4,5]},
+  ng:{reg:'af',n:'奈及利亞',flag:'🇳🇬',hi:'Bawo ni！',food:'加羅夫飯',f:['阿瑪拉','琪歐瑪','阿達'],m:['奇內杜','埃梅卡','圖恩德'],skin:[6,7,8]},
+  ke:{reg:'af',n:'肯亞',flag:'🇰🇪',hi:'Jambo！',food:'烤肉和玉米糕',f:['阿米娜','旺吉露','娜莉'],m:['卡馬烏','基普','奧馬'],skin:[6,7,8]},
+  eg:{reg:'me',n:'埃及',flag:'🇪🇬',hi:'Ahlan！',food:'庫莎莉',f:['雅絲敏','法蒂瑪','萊拉'],m:['歐瑪','卡里姆','優素福'],skin:[3,4,5,6]},
+  au:{reg:'eu',n:'澳洲',flag:'🇦🇺',hi:"G'day！",food:'肉派和袋鼠造型餅乾',f:['米亞','潔絲','露比'],m:['庫柏','伊森','萊恩'],skin:[0,1,2,4,6,8]},
+  ca:{reg:'eu',n:'加拿大',flag:'🇨🇦',hi:'Hello, eh!',food:'楓糖鬆餅',f:['艾娃','莉莉','克萊兒'],m:['連恩','柯爾','馬修'],skin:[0,1,2,3,5,7]}
 };
 const COUNTRY_ORDER=Object.keys(COUNTRIES);
 function countryOf(h){return COUNTRIES[(h&&h.res&&h.res.look&&h.res.look.country)||'tw']||COUNTRIES.tw;}
@@ -879,11 +879,22 @@ function freshRoom(seed){return{wall:WALLS[seed%WALLS.length],floor:FLOORS[(seed
 const FACES={face:['圓臉','瓜子臉','方臉','鵝蛋臉'],eyes:['一般','大眼','細長眼','下垂眼','上揚眼','單眼皮'],brow:['細眉','濃眉','平眉','淡眉'],nose:['小巧','挺鼻','寬鼻翼'],mouth:['小嘴','微笑唇','厚唇','貓咪嘴']};
 function randFace(gender,look){const m=gender==='m';look.face=Math.floor(Math.random()*4);look.eyes=Math.floor(Math.random()*6);look.brow=Math.floor(Math.random()*4);look.nose=Math.floor(Math.random()*3);look.mouth=Math.floor(Math.random()*4);
   look.freckles=Math.random()<.15;look.mole=Math.random()<.12;look.glasses=Math.random()<.18?(Math.random()<.5?1:2):0;look.beard=m&&Math.random()<.3?1+Math.floor(Math.random()*3):0;return look;}
-function randLookC(gender,cc){const C=COUNTRIES[cc]||COUNTRIES.tw;const L=randLook(gender);L.country=cc;L.skin=SKINS[choice(C.skin)];
-  if(['jp','kr','tw','th','vn','ph','in','ng','ke','eg','mx'].includes(cc)&&Math.random()<.75)L.hair=choice(['#2b2220','#2b2220','#5b3a26','#6b4a2e']);
-  if(['se','de','ru'].includes(cc)&&Math.random()<.5)L.hair=choice(['#e4b54c','#d8c7a0','#a5672f']);if(['gb','ca','au','us'].includes(cc)&&Math.random()<.15)L.hair='#8a3b2a';
-  if(Math.random()<.65)L.eye=['se','de','ru','gb','fr','ca','au','us'].includes(cc)&&Math.random()<.5?choice(['#3b5dc9','#2f9e5a','#2aa5a5']):choice(['#2b2230','#2b2230','#8a4f2a']);
-  return L;}
+/* locally typical looks per region; everything stays editable in the maker */
+const REG_LOOK={
+  ea:{hair:[['#2b2220',6],['#5b3a26',2],['#6b4a2e',1]],eye:[['#2b2230',6],['#8a4f2a',2]],f:[[1,3],[4,2],[5,2],[7,2],[2,1],[6,1],[0,1]],m:[[0,3],[11,3],[3,1],[17,1],[15,1],[13,1]]},
+  sea:{hair:[['#2b2220',6],['#5b3a26',2]],eye:[['#2b2230',5],['#8a4f2a',3]],f:[[1,3],[4,2],[5,2],[9,1],[2,1]],m:[[0,3],[11,2],[3,1],[12,1]]},
+  sa:{hair:[['#2b2220',7],['#5b3a26',2]],eye:[['#2b2230',4],['#8a4f2a',4]],f:[[1,4],[9,2],[2,2],[4,1]],m:[[0,3],[11,2],[14,1],[15,1]]},
+  af:{hair:[['#2b2220',8],['#5b3a26',1]],eye:[['#2b2230',6],['#8a4f2a',3]],f:[[0,3],[8,2],[10,2],[5,1],[9,1]],m:[[12,4],[14,3],[0,2]]},
+  la:{hair:[['#2b2220',4],['#5b3a26',4],['#6b4a2e',2],['#a5672f',1]],eye:[['#8a4f2a',5],['#2b2230',3],['#2f9e5a',1]],f:[[8,3],[1,3],[4,2],[9,1]],m:[[14,3],[0,3],[13,1],[15,1]]},
+  me:{hair:[['#2b2220',6],['#5b3a26',3]],eye:[['#8a4f2a',5],['#2b2230',4],['#2f9e5a',1]],f:[[1,3],[8,2],[4,2],[2,1]],m:[[0,3],[14,2],[15,2],[11,1]]},
+  eu:{hair:[['#5b3a26',3],['#6b4a2e',2],['#a5672f',2],['#e4b54c',2],['#d8c7a0',1],['#2b2220',2],['#8a3b2a',1]],eye:[['#3b5dc9',3],['#2f9e5a',2],['#8a4f2a',3],['#2aa5a5',1],['#2b2230',1]],f:[[1,3],[8,2],[4,2],[9,2],[5,1],[6,1]],m:[[0,3],[16,2],[14,2],[15,1],[13,1]]}};
+function regOf(cc){return(COUNTRIES[cc]||COUNTRIES.tw).reg||'ea';}
+function localize(L,gender,cc,keepStyle){const C=COUNTRIES[cc]||COUNTRIES.tw;const R=REG_LOOK[regOf(cc)];const W=a=>wpick(a,x=>x[1])[0];
+  L.country=cc;L.skin=SKINS[choice(C.skin)];L.hair=W(R.hair);L.eye=W(R.eye);
+  if(cc==='se'||cc==='de'||cc==='ru'){if(Math.random()<.5)L.hair=choice(['#e4b54c','#d8c7a0','#a5672f']);}
+  if(!keepStyle){const st=W(gender==='f'?R.f:R.m);if((gender==='f'?HSTYLE_F:HSTYLE_M).includes(st))L.style=st;}
+  if(gender!=='m'||(['ea','sea'].includes(regOf(cc))&&!keepStyle&&Math.random()<.65))L.beard=0;return L;}
+function randLookC(gender,cc){return localize(randLook(gender),gender,cc,false);}
 function randLook(gender){const f=gender==='f';return randFace(gender,{skin:choice(SKINS),hair:choice(HAIRS),style:choice(f?HSTYLE_F:HSTYLE_M),shirt:choice(SHIRTS),pants:choice(PANTS),dress:f&&Math.random()<.35,eye:Math.random()<.6?EYES[0]:choice(EYES),sleeve:Math.random()<.5?'short':'long',legs:Math.random()<.35?'short':'long'});}
 function makeHabit(name,rname,gender,look,slot,pers){const cc=calOf(typeof gameMin==='number'?gameMin:0);return{bday:{m:cc.m,d:cc.dm},id:uidGen(),name,created:today(),checks:[],slot,gender,fav:30,res:{name:rname,look},room:freshRoom(slot+Math.floor(Math.random()*5)),chat:[],secrets:[],pers};}
 function exampleState(){
@@ -1200,7 +1211,7 @@ function canPlace(id,tx,ty,r,ignoreU){
   for(const[x,y]of tt.fp)if(roomAt(x,y)!==room)return no('超出房間範圍了');
   if(room.type==='bed'&&!SLOT[room.slot])return no('這間房還沒有人住');
   const isB=(x,y)=>{const o=blockOwner[y][x];return o!=null&&o!==ignoreU;};
-  const standSpots=new Set(SP.filter(s=>!s.temp&&s.src!==ignoreU&&!isB(s.tx,s.ty)).map(s=>s.tx+','+s.ty));
+  const standSpots=new Set(SP.filter(s=>!s.temp&&s.src!==ignoreU&&s.kind!=='think'&&s.kind!=='petbowl'&&!isB(s.tx,s.ty)).map(s=>s.tx+','+s.ty));
   if(def.flat){
     for(const[x,y]of tt.fp)for(const f of FLATS)if(f.u!==ignoreU&&defTiles(f.def,f.p.tx,f.p.ty,f.p.r).fp.some(([a,b])=>a===x&&b===y))return no('這裡已經鋪了東西');
     for(const[x,y]of tt.spots)if(isB(x,y))return no('上面要留空間才能使用');
@@ -1212,7 +1223,7 @@ function canPlace(id,tx,ty,r,ignoreU){
   const reach=flood(blk),base=flood(isB);
   for(const k of base)if(!maskSet.has(k)&&!reach.has(k))return no('會把走道堵住');
   const nearIn=(R,x,y)=>R.has(x+','+y)||[[1,0],[-1,0],[0,1],[0,-1]].some(([dx,dy])=>R.has((x+dx)+','+(y+dy))&&!wallBetween(x,y,x+dx,y+dy));
-  for(const s of SP){if(s.temp||s.src===ignoreU)continue;if(!nearIn(reach,s.tx,s.ty)&&nearIn(base,s.tx,s.ty))return no('會讓別的家具沒辦法使用');}
+  for(const s of SP){if(s.temp||s.src===ignoreU||s.kind==='think'||s.kind==='petbowl')continue;if(!nearIn(reach,s.tx,s.ty)&&nearIn(base,s.tx,s.ty))return no('會讓別的家具沒辦法使用');}
   for(const[x,y]of tt.spots)if(!nearIn(reach,x,y))return no('走不過去使用它');
   return{ok:true};
 }
@@ -1739,6 +1750,7 @@ function arrive(r){
   if(s.bub)showBub(r,s.bub,3.5);
   if(!s.mope&&!s.same&&!s.pair&&['kseat','toilet','shower','tub','bed','sofa','desk','game','tvwatch','guitar','easel','fit','run','movie','karaoke','piano','massage','oven','coffee'].includes(sp.kind)&&Math.random()<.4)log(r.name+' '+s.txt.replace(' zzZ',''));
   if(s.mope&&!s.fight&&Math.random()<.3)log(r.name+' '+s.txt);
+  if(s.cook&&Math.random()<.15){const h0=habitById(r.id);const CO=h0&&countryOf(h0);if(CO)log(r.name+' 煮了家鄉味：'+CO.food.split('和')[0]);}
   if(s.cook&&!FX.smoke&&!EMG&&!CATCHING&&Math.random()<.05)setTimeout(()=>startEmergency('smoke',{r}),1500);
 }
 function showBub(r,icon,sec){r.bub=icon;r.bubT=sec;}
@@ -3005,9 +3017,11 @@ function rotateSel(){const p=state.placed.find(x=>x.u===build.sel);if(!p||CAT[p.
   const dims=r=>r%2?[def.d,def.w]:[def.w,def.d];const[ow,od]=dims(p.r|0);const cx=p.tx+ow/2,cy=p.ty+od/2;let found=null,why='';
   for(let k=1;k<4&&!found;k++){const nr=((p.r|0)+k)%4;const[nw,nd]=dims(nr);const bx=Math.round(cx-nw/2),by=Math.round(cy-nd/2);
     const offs=[[0,0]];for(let rad=1;rad<=2;rad++)for(let dy=-rad;dy<=rad;dy++)for(let dx=-rad;dx<=rad;dx++)if(Math.max(Math.abs(dx),Math.abs(dy))===rad)offs.push([dx,dy]);
-    for(const[dx,dy]of offs){const v=canPlace(p.id,bx+dx,by+dy,nr,p.u);if(v.ok){found=[nr,bx+dx,by+dy];break;}if(!why)why=v.why;}}
+    for(const[dx,dy]of offs){const v=canPlace(p.id,bx+dx,by+dy,nr,p.u);if(v.ok){found=[nr,bx+dx,by+dy];break;}if(!why)why=v.why;}
+    if(!found){const room=roomAt(p.tx,p.ty);if(room){const c=[];for(let y=room.y;y<room.y+room.h;y++)for(let x=room.x;x<room.x+room.w;x++)c.push([x,y]);c.sort((a,b)=>Math.hypot(a[0]-bx,a[1]-by)-Math.hypot(b[0]-bx,b[1]-by));
+      for(const[x,y]of c){if(canPlace(p.id,x,y,nr,p.u).ok){found=[nr,x,y];break;}}}}}
   if(!found){toast('這個位置轉不過來（'+why+'），先移到空一點的地方再轉');return;}
-  const[nr,nx,ny]=found;const want=((p.r|0)+1)%4;if(nr!==want)toast('轉 90° 放不下，直接轉到 '+nr*90+'°');p.r=nr;p.tx=nx;p.ty=ny;rebuild();saveSoon();renderBuildBar();}
+  const[nr,nx,ny]=found;const want=((p.r|0)+1)%4;if(nr!==want)toast('這個房間放不下 '+want*90+'° 的方向，轉到 '+nr*90+'°');else if(Math.abs(nx-p.tx)+Math.abs(ny-p.ty)>2)toast('轉到 '+nr*90+'°，原位置放不下，幫你挪到旁邊');p.r=nr;p.tx=nx;p.ty=ny;rebuild();saveSoon();renderBuildBar();}
 function tileAt(sx,sy){const a=sx-BASE_OX,b=2*(sy-BASE_OY);return[Math.floor((a+b)/2/T),Math.floor((b-a)/2/T)];}
 function placedAt(sx,sy){
   useFloor(viewFloor);
@@ -3443,9 +3457,9 @@ function buildMaker(){
   if(!draft.sleeve)draft.sleeve='long';if(!draft.legs)draft.legs='long';
   const cd=el('div','opt');cd.append(el('span',null,'出身國家'));const cs=document.createElement('select');cs.className='t';cs.style.maxWidth='200px';cs.setAttribute('aria-label','出身國家');
   for(const k of COUNTRY_ORDER){const op=document.createElement('option');op.value=k;op.textContent=COUNTRIES[k].flag+' '+COUNTRIES[k].n;if(k===(draft.country||'tw'))op.selected=true;cs.append(op);}
-  cs.onchange=()=>{const cc=cs.value;const old=draft.country;draft.country=cc;draft.skin=SKINS[choice(COUNTRIES[cc].skin)];const cn=$('#rName').value.trim();
+  cs.onchange=()=>{const cc=cs.value;const old=draft.country;localize(draft,draftGender,cc,true);const cn=$('#rName').value.trim();
     if(!cn||(old&&COUNTRIES[old]&&COUNTRIES[old][draftGender]&&COUNTRIES[old][draftGender].includes(cn))||NAMES[draftGender].includes(cn))$('#rName').value=nameFor(draftGender,cc);buildMaker();};
-  const ccb=el('button','btn sm','依國家隨機');ccb.type='button';ccb.onclick=()=>{draft=randLookC(draftGender,draft.country||'tw');$('#rName').value=nameFor(draftGender,draft.country);buildMaker();};cd.append(cs,ccb);o.append(cd);
+  const ccb=el('button','btn sm','依國家隨機');ccb.type='button';ccb.onclick=()=>{draft=randLookC(draftGender,draft.country||'tw');$('#rName').value=nameFor(draftGender,draft.country);buildMaker();};const lcb=el('button','btn sm','套用國籍特色');lcb.type='button';lcb.title='依出身國家調整膚色、髮色、眼睛顏色，保留其他設定';lcb.onclick=()=>{localize(draft,draftGender,draft.country||'tw',true);buildMaker();};cd.append(cs,ccb,lcb);o.append(cd);
   row('膚色',SKINS,'skin',true);row('眼睛顏色',EYES,'eye',true);
   row('臉型',FACES.face,'face',false);row('眼型',FACES.eyes,'eyes',false);row('眉毛',FACES.brow,'brow',false);row('鼻子',FACES.nose,'nose',false);row('嘴巴',FACES.mouth,'mouth',false);
   const ex=el('div','opt');ex.append(el('span',null,'特徵'));const tog=(k,l)=>{const b=el('button','pill',l);b.type='button';b.setAttribute('aria-pressed',String(!!draft[k]));b.onclick=()=>{draft[k]=!draft[k];buildMaker();};ex.append(b);};
@@ -3710,9 +3724,9 @@ const ART_EXPR={neutral:'neutral',happy:'happy',love:'shy',shy:'shy',sad:'sad',g
 /* portrait bases: hair silhouette + facial features they show */
 const ARCH={
   FL:{g:'f',st:[1,7,9]},FN:{g:'f',st:[2,10]},FP:{g:'f',st:[4,6]},FB:{g:'f',st:[5,0]},
-  FC:{g:'f',st:[8,0,5],tan:1},FA:{g:'f',st:[0,5,8,10],dark:1},FG:{g:'f',st:[5,7,0],glasses:1},FF:{g:'f',st:[9,6,4],freckles:1},FS:{g:'f',st:[2,1,7],mole:1,eyes:[4,2]},
+  FC:{g:'f',st:[8,0,5],tan:1,reg:['la','me','sa','eu']},FA:{g:'f',st:[0,5,8,10],dark:1,reg:['af','la','eu']},FG:{g:'f',st:[5,7,0],glasses:1,reg:['ea','sea']},FF:{g:'f',st:[9,6,4],freckles:1,reg:['eu']},FS:{g:'f',st:[2,1,7],mole:1,eyes:[4,2],reg:['ea','sea','sa']},
   MS:{g:'m',st:[0,11,15,17]},MK:{g:'m',st:[3,13]},
-  MB:{g:'m',st:[14,0,13],beard:[3,2],tan:1},MG:{g:'m',st:[11,0,15],glasses:1},MD:{g:'m',st:[12,0],dark:1},MR:{g:'m',st:[14,17],face:[0]},ML:{g:'m',st:[16,13],beard:[1]}};
+  MB:{g:'m',st:[14,0,13],beard:[3,2],tan:1,reg:['me','la','eu','sa']},MG:{g:'m',st:[11,0,15],glasses:1,reg:['ea','sea','sa']},MD:{g:'m',st:[12,0],dark:1,reg:['af','la','eu']},MR:{g:'m',st:[14,17],face:[0],reg:['eu','la']},ML:{g:'m',st:[16,13],beard:[1],reg:['eu','la']}};
 function skinDark(hex){const[r,g,b]=hexToRgb(hex||'#f8d9bd');return 1-(r*.3+g*.59+b*.11)/255;}
 function archetypeOf(h){const L=h.res.look,s=L.style,g=h.gender==='f'?'f':'m';const dk=skinDark(L.skin);let best=null,bs=-1e9;
   for(const k in ARCH){const A=ARCH[k];if(A.g!==g||!ART_IMG[k+'_neutral'])continue;let sc=0;
@@ -3721,6 +3735,7 @@ function archetypeOf(h){const L=h.res.look,s=L.style,g=h.gender==='f'?'f':'m';co
     if(A.beard)sc+=A.beard.includes(L.beard|0)?9:(L.beard?2:-6);else if(L.beard)sc-=3;
     if(A.freckles)sc+=L.freckles?8:-4;if(A.mole)sc+=(L.mole?4:-2)+(A.eyes.includes(L.eyes|0)?3:0);
     if(A.dark)sc+=dk>.55?6:dk>.42?2:-6;if(A.tan)sc+=dk>.3&&dk<.62?3:0;if(A.face)sc+=A.face.includes(L.face|0)?3:0;
+    if(A.reg){const rg=regOf(L.country);sc+=A.reg.includes(rg)?1:-12;}
     sc+=(hashStr(h.id+k)%100)/100;if(sc>bs){bs=sc;best=k;}}
   return best||(g==='f'?'FB':'MS');}
 const ART_LOADED={},ART_CACHE=new Map();
