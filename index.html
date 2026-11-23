@@ -315,6 +315,7 @@ button.chip.mail{background:#e9f3ff;color:var(--ink);position:relative}
 .wkr i.on{background:var(--green)}.wkr i.fut{background:#eee;border-style:dashed}.wkr i.h{border:0;background:none}
 .dreamcard{font-size:12px;border:2px solid var(--ink);padding:6px 8px;margin:8px 0;background:#f4f0ff}
 .dreamcard .bar{margin:4px 0}
+.timeline{list-style:none;margin:6px 0;padding:0;display:grid;gap:4px;font-size:12px;max-height:260px;overflow:auto}.timeline li{border-left:3px solid var(--gold);padding:2px 6px;background:#fffaf0;line-height:1.5}
 .qty{display:flex;align-items:center;gap:6px;margin-top:4px}.qty .bar{flex:1;min-width:60px;margin:0}.qty small{font-size:11px;white-space:nowrap}
 .hx{margin-top:3px;display:flex;flex-wrap:wrap;gap:8px}.link{background:none;border:0;padding:0;color:var(--blue);text-decoration:underline;cursor:pointer;font-size:12px;font-family:inherit}
 .notebar{display:flex;flex-wrap:wrap;align-items:center;gap:4px;margin-top:6px;padding:4px;border:2px dashed var(--ink);background:#fffaf0}.notebar small{font-size:11px;width:100%}
@@ -1749,7 +1750,7 @@ function nextStep(r){
   const s=r.plan.shift();
   if(s&&s.same&&r.spot){r.step=s;r.state='act';r.timer=s.dur;arrive(r);return;}
   releaseSpot(r);
-  if(!s){r.lastAct=r.planAct;try{dreamAct(r,r.planAct);}catch(e){}r.step=null;r.state='idle';r.wait=rand(1,3);return;}
+  if(!s){r.lastAct=r.planAct;try{dreamAct(r,r.planAct);const D=dayNote(r);D.acts[r.planAct]=(D.acts[r.planAct]||0)+1;}catch(e){}r.step=null;r.state='idle';r.wait=rand(1,3);return;}
   let sp=null;if(s.fixed&&(!s.fixed.occ||s.fixed.occ===r)&&WORLDS[s.fixed.f]&&WORLDS[s.fixed.f].SP.includes(s.fixed))sp=s.fixed;else if(!s.fixed||s.kind!=='pair')sp=pick(s.kind,r);
   if(!sp){if(s.essential&&r.tries<6){r.tries++;r.plan.unshift(s);r.step=null;r.state='idle';r.waiting=true;r.wait=4;showBub(r,'dots',2.5);r.doing='等著用'+(s.kind==='toilet'?'廁所':s.kind==='kseat'?'餐桌':'空位');return;}
     nextStep(r);return;}
@@ -1770,7 +1771,7 @@ function finishStep(r){
   if(s&&s.outfit){r.alt=choice(SHIRTS.filter(c=>c!==r.look.shirt));r.look=Object.assign({},r.look,{shirt:r.alt});}
   if(s&&s.paint&&r.spot&&r.spot.inst){const p=r.spot.inst.p;p.paint=Math.min(100,(p.paint||0)+18);if(p.paint>=100){p.paint=0;log(r.name+' 完成了一幅畫！');}}
   if(s&&s.bake){log(r.name+' 烤了一盤餅乾分給大家');for(const o of RES)if(o!==r&&o.f===r.f){o.needs.mood=clamp(o.needs.mood+6,0,100);showBub(o,'cookie',2.5);relGet(r.id,o.id).aff+=2;}}
-  if(s&&s.pair&&s.with){const rel=relGet(r.id,s.with);rel.aff=clamp(rel.aff+1.5,0,100);relDirty=true;}
+  if(s&&s.pair&&s.with){const D=dayNote(r);const wn=nameOf(s.with);D.with[wn]=(D.with[wn]||0)+1;const rel=relGet(r.id,s.with);rel.aff=clamp(rel.aff+1.5,0,100);relDirty=true;}
   if(s&&s.work){const h=habitById(r.id);if(h)paySalary(r,h,s.late);}
   if(s&&s.kid)careDone(r,s);
   if(s&&s.feedPet){const p=petsArr().filter(x=>!(x.away>gameMin)).sort((a,b)=>(a.hunger||0)-(b.hunger||0))[0];if(p){p.hunger=100;const pt=PETS.find(x=>x.id===p.id);if(pt&&r.spot){useFloor(0);const path=bfs(pt.tx,pt.ty,r.spot.tx,r.spot.ty);if(path)pt.path=path;pt.bub='heart';pt.bubT=3;}if(Math.random()<.5)log(r.name+' 餵'+p.name+'吃飯');}}
@@ -1834,6 +1835,7 @@ function breakUp(a,b,mode){const rel=relGet(a,b);const was=rel.stage;const A=nam
   if(mode==='peace'){rel.stage=2;rel.aff=Math.max(rel.aff,45);moodAdd(a,-12);moodAdd(b,-12);msg=A+' 和 '+B+(was===7?' 和平離婚了':' 和平分手了')+'，說好以後還是朋友'+(kids?'，也會一起照顧孩子':'');}
   else{rel.stage=1;rel.aff=Math.min(rel.aff,8);moodAdd(a,-30);moodAdd(b,-30);for(const id of[a,b]){const r=R_(id);if(r){r.emo='angry';r.emoT=5;showBub(r,'angry',3);}}
     msg=A+' 和 '+B+(was===7?' 吵到離婚了':' 大吵一架後分手了')+'，現在誰也不想理誰…'+(kids?'孩子夾在中間好可憐':'');}
+  lifeLog(a,'💔',(was===7?'和 '+B+' 離婚':'和 '+B+' 分手')+(mode==='peace'?'（和平）':'（鬧翻）'));lifeLog(b,'💔',(was===7?'和 '+A+' 離婚':'和 '+A+' 分手')+(mode==='peace'?'（和平）':'（鬧翻）'));
   log('💔 '+msg);toast('💔 '+msg,true);relDirty=true;saveSoon();return msg;}
 function exLabel(r){if(!r.ex)return null;const w=r.wasMarried;return r.ex==='peace'?(w?'前配偶・好聚好散':'前任・和平分手'):(w?'前配偶・鬧翻':'前任・鬧翻');}
 function relTick(){
@@ -1873,6 +1875,9 @@ function dayTick(){
   ensureWeekParty();if(wd>=3)rsvpAll();if(wd===5)confirmParty();
   for(const h of state.habits){if(h.preg&&day-h.preg.since>=21){birth(h.id,h.preg.partner);delete h.preg;}}
   for(const h of state.habits){const r=R_(h.id);if(r){dailyLife(r,h);dreamDaily(r,h);}}
+  guard('diary',()=>writeDiaries(day-1));guard('friends',friendEvents);
+  for(const ap of(state.apol||[]))if(habitById(ap.a)&&habitById(ap.b)){relAdd(ap.a,ap.b,8);log('💌 '+nameOf(ap.a)+' 寫了一封道歉信給 '+nameOf(ap.b)+'，兩人和好了');}state.apol=[];
+  for(const h of state.habits)if(Math.random()<.06&&h.created<today()){scheduleVisit(h);break;}
   checkAch();
   if(state.babies.length>=6)return;
   for(const k in state.rel){const rel=state.rel[k];if(rel.stage<5)continue;const[a,b]=k.split('|');const ha=habitById(a),hb=habitById(b);if(!ha||!hb)continue;
@@ -1888,7 +1893,7 @@ function dayTick(){
 function birth(a,b,adopt){
   const ha=habitById(a),hb=habitById(b);const pa=ha?ha.res.look:randLook('f'),pb=hb?hb.res.look:pa;const gen=Math.random()<.5?'f':'m';
   const baby={id:uidGen('b'),name:randName(gen),gender:gen,look:{skin:choice([pa.skin,pb.skin]),hair:choice([pa.hair,pb.hair]),shirt:gen==='f'?'#f7b6d2':'#9fd0f5'},parents:[a,b],born:houseDay(),adopt:!!adopt};
-  state.babies.push(baby);syncBabies();statAdd('births');addPhoto('baby',(adopt?'領養':'出生')+'：'+baby.name,[baby.id,a,b]);const msg=(adopt?nameOf(a)+' 和 '+nameOf(b)+' 領養了寶寶「':'寶寶出生了！'+nameOf(a)+' 和 '+nameOf(b)+' 的孩子「')+baby.name+'」';
+  state.babies.push(baby);syncBabies();for(const pid of[a,b])lifeLog(pid,'👶',(adopt?'領養了':'迎接')+'孩子「'+baby.name+'」');statAdd('births');addPhoto('baby',(adopt?'領養':'出生')+'：'+baby.name,[baby.id,a,b]);const msg=(adopt?nameOf(a)+' 和 '+nameOf(b)+' 領養了寶寶「':'寶寶出生了！'+nameOf(a)+' 和 '+nameOf(b)+' 的孩子「')+baby.name+'」';
   log(msg);toast(msg,true);celebratePair(a,b,true);saveSoon();renderList();
   const pool=NICE_NAMES[gen].filter(n=>n!==baby.name).sort(()=>Math.random()-.5);const names=[baby.name,pool[0],pool[1]].filter(Boolean);
   const from=habitById(a)?a:b;if(habitById(from)&&needCrib(0))setTimeout(()=>askCrib(from,true),100);if(habitById(from))sendLetter('baby_name',from,'寶寶來到我們家了！要幫寶寶取什麼名字呢？',[...new Set(names)].map(n=>'叫「'+n+'」'),{baby:baby.id,names:[...new Set(names)]},0);
@@ -1910,6 +1915,7 @@ function pairEvent(){
     a.emo='angry';a.emoT=4;b.emo='angry';b.emoT=4;setPemo(a,'angry',10);setPemo(b,'angry',10);showBub(a,'angry',3);showBub(b,'angry',3);log('✕ '+msg);toast(msg);
     if(!EMG&&!CATCHING&&!document.hidden&&Math.random()<.35+(Pa.temper+Pb.temper)*.2)setTimeout(()=>startEmergency('fight',{a,b}),1200);
     else if(Math.random()<.25)sendMediate(a.id,b.id);
+    else if(rel.stage>=2&&!rel.ex&&Math.random()<.5){state.apol=(state.apol||[]).concat([{a:a.id,b:b.id}]).slice(-5);}
     else if(Math.random()<.3&&!letterPending('fight',a.id))sendLetter('fight',a.id,tone(ha,b.name+' 真的很過分！你會站在我這邊吧？'),['我站在你這邊','你們都冷靜一下','我覺得是你不對'],{b:b.id},1);}
   relDirty=true;
 }
@@ -2063,10 +2069,10 @@ function comeHome(r){const h=habitById(r.id);const a=r.away||{};r.away=null;useF
   else if(a.kind==='trip'){r.needs.mood=clamp(r.needs.mood+35,0,100);log(r.name+' 旅行回來了，帶了'+choice(['鳳梨酥','手工餅乾','明信片','鑰匙圈','當地的茶葉'])+'給大家');for(const o of RES)if(o!==r)o.needs.mood=clamp(o.needs.mood+4,0,100);}
   else if(a.kind==='date'){r.needs.mood=clamp(r.needs.mood+15,0,100);if(a.with&&r.id<a.with){relAdd(r.id,a.with,5);log(r.name+' 和 '+nameOf(a.with)+' 約會回來，兩人笑得好甜');}}
   showBub(r,a.kind==='work'?'zz':'smile',2.5);}
-function paySalary(r,h,late){const j=jobOf(h);const pay=Math.round(j.pay*(late?.85:1)*(1+(h.promo||0)*.15));h.money=(h.money||0)+pay;h.shifts=(h.shifts||0)+1;
+function paySalary(r,h,late){{const D=dayNote(r);D.acts.work=(D.acts.work||0)+1;}const j=jobOf(h);const pay=Math.round(j.pay*(late?.85:1)*(1+(h.promo||0)*.15));h.money=(h.money||0)+pay;h.shifts=(h.shifts||0)+1;
   const P=persOf(h);r.needs.mood=clamp(r.needs.mood+(P.has('workaholic')?8:P.has('lazy')?-8:-3),0,100);
   log(r.name+' 下班回家了'+(late?'（遲到被扣薪）':'')+'，今天賺了 '+pay+' 元');
-  if(h.shifts%24===0&&j.pay>=60&&!letterPending('promo',h.id)){h.promo=(h.promo||0)+1;sendLetter('promo',h.id,tone(h,'我升職了！以後每天多賺一點了。要怎麼慶祝呢？'),['辦聚會請大家吃飯（花他 120 元）','把錢存起來','買個禮物犒賞自己']);}}
+  if(h.shifts%24===0&&j.pay>=60&&!letterPending('promo',h.id)){h.promo=(h.promo||0)+1;lifeLog(h.id,'📈','升職了（'+j.name+'）');sendLetter('promo',h.id,tone(h,'我升職了！以後每天多賺一點了。要怎麼慶祝呢？'),['辦聚會請大家吃飯（花他 120 元）','把錢存起來','買個禮物犒賞自己']);}}
 function roomHas(h,id){const f=floorOfSlot(h.slot),i=h.slot%PER_FLOOR;return state.placed.some(p=>p.id===id&&(p.f||0)===f&&p.tx>=7*i&&p.tx<7*i+7&&p.ty>=8);}
 const TRAIT_ITEMS={otaku:['ps5','tv','beanbag'],sporty:['fitness'],artsy:['easel','bookshelf'],romantic:['plush','vanity'],narcissist:['vanity'],musician:['guitar','piano'],lazy:['beanbag','tv'],curious:['aquarium','bookshelf'],calm:['aquarium','nightlight'],foodie:['plush'],clingy:['plush'],workaholic:['desk']};
 function wishItem(h){const P=persOf(h);const room=CAT_ORDER.room.filter(k=>!['bed','princess','dbed','wardrobe'].includes(k)&&CAT[k]&&!roomHas(h,k));if(!room.length)return null;
@@ -2102,8 +2108,9 @@ function upgradeBed(ownerId){const h=habitById(ownerId);if(!h)return false;const
     state.placed.push({u:uidGen('p'),id:'dbed',tx:x,ty:y,r:rr,f});return true;}}
   return false;}
 function setHome(a,b,owner){const rel=relGet(a,b);rel.home=owner;rebuildHome();const ok=upgradeBed(owner);rebuild();
-  const mover=owner===a?b:a;return nameOf(mover)+' 搬進了 '+nameOf(owner)+' 的房間，兩人正式同居了！'+(ok?'房間換上了雙人床（原本的床收進倉庫）。':'房間太擠放不下雙人床，暫時各睡各的床。');}
+  const mover=owner===a?b:a;lifeLog(mover,'🏡','搬進 '+nameOf(owner)+' 的房間同居');lifeLog(owner,'🏡',nameOf(mover)+' 搬進來一起住');return nameOf(mover)+' 搬進了 '+nameOf(owner)+' 的房間，兩人正式同居了！'+(ok?'房間換上了雙人床（原本的床收進倉庫）。':'房間太擠放不下雙人床，暫時各睡各的床。');}
 function setStage(a,b,s,msg,big){const rel=relGet(a,b);rel.stage=s;rel.since=houseDay();relDirty=true;if(msg){log(msg);toast(msg,big);}celebratePair(a,b,big);
+  if(s>=5){const W={5:'開始交往',6:'訂婚',7:'結婚'}[s];lifeLog(a,s===7?'💍':'💕','和 '+nameOf(b)+' '+W);lifeLog(b,s===7?'💍':'💕','和 '+nameOf(a)+' '+W);}
   if(s===5&&rel.ex){const m0='💞 '+nameOf(a)+' 和 '+nameOf(b)+' 復合了！';log(m0);toast(m0,true);rel.ex=null;}
   if(s===5){statAdd('couples');addPhoto('love',nameOf(a)+' 和 '+nameOf(b)+' 開始交往',[a,b]);}
   if(s===7){statAdd('weddings');addPhoto('wedding',nameOf(a)+' 和 '+nameOf(b)+' 的婚禮',[a,b]);afterWedding(a,b);}if(s<7&&rel.home){rel.home=null;rebuildHome();}saveSoon();}
@@ -2152,7 +2159,7 @@ const LETTERS={
     if(needCrib(1+state.habits.filter(x=>x.preg).length)){askCrib(a,false);return nameOf(a)+' 說：「那我們要先準備一張嬰兒床！」';}
     if(ha.gender!==hb.gender){const mom=ha.gender==='f'?ha:hb,dad=mom===ha?hb:ha;if(!mom.preg){mom.preg={since:houseDay(),partner:dad.id};}return mom.res.name+' 懷孕了！大約三週後寶寶就會出生';}
     birth(a,b,true);return nameOf(a)+' 和 '+nameOf(b)+' 去領養了一個寶寶！';}},
-  job_offer:{run(L,i){const h=habitById(L.from);const j=JOBS[L.data.job];if(i!==0||!j)return h.res.name+' 決定維持現狀';h.job=L.data.job;h.shifts=0;h.promo=0;h.lastShift=null;moodAdd(h.id,10);return h.res.name+' 換了新工作：'+j.name+'！'+jobDesc(j);}},
+  job_offer:{run(L,i){const h=habitById(L.from);const j=JOBS[L.data.job];if(i!==0||!j)return h.res.name+' 決定維持現狀';h.job=L.data.job;h.shifts=0;h.promo=0;h.lastShift=null;moodAdd(h.id,10);lifeLog(h.id,'💼','開始新工作：'+j.name);return h.res.name+' 換了新工作：'+j.name+'！'+jobDesc(j);}},
   quit_job:{run(L,i){const h=habitById(L.from);if(i===0){const old=jobOf(h).name;h.job='none';moodAdd(h.id,30);return h.res.name+' 辭掉了'+old+'的工作，打算好好休息一陣子';}
     if(i===1){moodAdd(h.id,14);favAdd(h.id,3);return h.res.name+' 說有你的鼓勵，好像又撐得下去了';}
     const ns=nextShift(h,gameMin);if(ns)h.lastShift=ns.id;moodAdd(h.id,18);return h.res.name+' 請了一天假，在家好好休息';}},
@@ -2181,6 +2188,7 @@ const LETTERS={
   note:{run(L,i){favAdd(L.from,1);return '';}}
 };
 function makeLetter(kind,r,h){const P=persOf(h);const j=jobOf(h);const T_=x=>tone(h,x);
+  if(kind==='trouble'){sendTrouble(h);return;}
   if(letterPending(kind,h.id))return;
   if(kind==='chat'){const lines=[];if(j.days.length)lines.push('今天在'+(j.place||'家')+'工作的時候，'+choice(['被客人稱讚了！','把事情做得超順利！','差點睡著…','遇到一個很好笑的同事。']));
     {const CO=countryOf(h);lines.push('今天跟'+CO.n+'的家人視訊，大家都說我變開心了！','我今天試著做了家鄉的'+CO.food+'，下次做給大家吃！');}
@@ -2200,7 +2208,7 @@ function makeLetter(kind,r,h){const P=persOf(h);const j=jobOf(h);const T_=x=>ton
 }
 function letterTick(){const hr=hour();if(hr<8||hr>=23||Math.random()>.06)return;
   const cand=RES.filter(r=>habitById(r.id));if(!cand.length)return;const r=choice(cand);const h=habitById(r.id);const P=persOf(h);
-  const pool=[['chat',3]];const y=addDays(today(),-1);
+  const pool=[['chat',3],['trouble',1.2]];const y=addDays(today(),-1);
   if(!isChecked(h,y)&&h.created<y)pool.push(['struggle',2]);
   if(!h.job||h.job==='none')pool.push(['job_offer',2.5]);else pool.push(['job_offer',.25]);
   if(r.needs.mood<40&&h.job&&h.job!=='none')pool.push(['quit_job',2.5]);
@@ -2296,6 +2304,7 @@ function eventsHourly(){const day=houseDay(),hr=hour();
     const th={id:'g',name:g.name,bub:'food',prop:'fork'};
     if(!startGather('gather',[g.host].concat(friends),th,g.host,day*1440+g.end*60)){log(host.res.name+' 的「'+g.name+'」沒什麼人有空，只好改天了');moodAdd(g.host,-10);if(!g.free)host.money=(host.money||0)+60;}break;}
   if(Math.random()<.25)checkAch();
+  guard('visits',visitTick);
   if(!state.live&&Math.random()<.04){const hosts=state.habits.filter(h=>(h.money||0)>=220&&persOf(h).social>=.6&&!letterPending('gather',h.id));if(hosts.length&&hr<17){const h=choice(hosts);h.money-=90;scheduleGather(h.id,choice(['火鍋聚會','燒肉宵夜','披薩之夜']));log(h.res.name+' 決定今晚自掏腰包請大家吃東西');}}
 }
 function dailyLife(r,h){const P=persOf(h);const day=houseDay();
@@ -2359,7 +2368,7 @@ function holidayTick(){const c=calOf(gameMin);const hd=holidayToday();
     state.gathers=state.gathers||[];state.gathers.push({day:houseDay(),start:19,end:22,host:null,all:true,name:hd.name,bub:hd.bub});
     addPhoto('holiday',hd.msg,state.habits.slice(0,6).map(h=>h.id));}
   for(const h of state.habits){const b=bdayOf(h);if(b.m!==c.m||b.d!==c.dm)continue;
-    log('🎂 今天是 '+h.res.name+' 的生日！');toast('🎂 今天是 '+h.res.name+' 的生日！',true);moodAdd(h.id,15);
+    log('🎂 今天是 '+h.res.name+' 的生日！');lifeLog(h.id,'🎂','過生日（'+calStr(gameMin,false)+'）');toast('🎂 今天是 '+h.res.name+' 的生日！',true);moodAdd(h.id,15);
     for(const o of state.habits)if(o!==h&&relGet(h.id,o.id).aff>=40)relAdd(h.id,o.id,3);
     sendLetter('bday',h.id,tone(h,'今天是我的生日耶！嘿嘿，你記得嗎？'),['生日快樂！送你蛋糕（15 金幣）','生日快樂！🎂'],{},1,[15,0]);
     state.gathers=state.gathers||[];state.gathers.push({day:houseDay(),start:19,end:21,host:h.id,name:h.res.name+' 的生日派對',free:true});statAdd('birthdays');}}
@@ -2385,7 +2394,7 @@ function openHabitFromKid(id){const b=state.babies.find(x=>x.id===id);if(!b)retu
   draftPers=fillTraits(pick,null,b.id);draftPers.custom={name:'',desc:'',base:'sunny'};persTouched=true;$('#mHabitT').textContent=b.name+' 長大了！選一個習慣';buildMaker();buildPers();}
 function kidMovedIn(h,bid){const b=state.babies.find(x=>x.id===bid);if(!b)return;h.parents=b.parents.slice();state.babies=state.babies.filter(x=>x!==b);syncBabies();
   for(const p of h.parents)if(habitById(p)){const rel=relGet(h.id,p);rel.stage=3;rel.aff=85;rel.family=true;}statAdd('grownups');addPhoto('grown',h.res.name+' 長大搬進自己的房間了',[h.id].concat(h.parents.filter(habitById)));
-  log('🏠 '+h.res.name+' 長大成人，搬進了自己的房間！');}
+  log('🏠 '+h.res.name+' 長大成人，搬進了自己的房間！');lifeLog(h.id,'👶','在小屋出生，爸媽是 '+h.parents.map(nameOf).join('、'));lifeLog(h.id,'🏠','長大成人，搬進自己的房間');}
 function isFamily(a,b){const ha=habitById(a),hb=habitById(b);if(!ha||!hb)return false;const pa=ha.parents||[],pb=hb.parents||[];return pa.includes(b)||pb.includes(a)||pa.some(x=>pb.includes(x));}
 
 /* ---------- pets ---------- */
@@ -2478,7 +2487,7 @@ function assignDream(r,h){if(dreamOf(h)||(h.dreamNext&&houseDay()<h.dreamNext))r
   h.dream={id:k,prog:0,since:houseDay()};log('✨ '+h.res.name+' 有了新夢想：'+DREAMS[k].name);}
 function dreamAct(r,act){const h=habitById(r.id);const d=h&&dreamOf(h);if(!d)return;const D=DREAMS[d.id];if(D.type!=='act'||!D.acts.includes(act))return;d.prog=(d.prog||0)+1;if(d.prog>=D.target)completeDream(h);}
 function completeDream(h){const d=dreamOf(h);if(!d)return;const D=DREAMS[d.id];if(D.type==='money')h.money=Math.max(0,(h.money||0)-D.target);
-  h.dreamsDone=(h.dreamsDone||[]).concat([d.id]);h.dream=null;h.dreamNext=houseDay()+3;statAdd('dreams');moodAdd(h.id,40);favAdd(h.id,10);
+  lifeLog(h.id,'✨','夢想成真：'+D.name);h.dreamsDone=(h.dreamsDone||[]).concat([d.id]);h.dream=null;h.dreamNext=houseDay()+3;statAdd('dreams');moodAdd(h.id,40);favAdd(h.id,10);
   const m='✨ 夢想成真！'+h.res.name+' '+D.done;log(m);toast(m,true);const r=R_(h.id);if(r){r.celebrate=4;showBub(r,'star',4);}
   addPhoto('dream',h.res.name+'：'+D.name,[h.id]);
   if(D.trip&&r&&r.state!=='away'){abortPlan(r);r.plan=[st('exit',1,{txt:'出發出國旅行',essential:true,leave:{kind:'trip',until:gameMin+2880,txt:'出國旅行'}})];r.planAct='trip';r.tries=0;nextStep(r);}
@@ -2709,7 +2718,7 @@ function chalOf(h){return h.chal&&CHALLENGES.find(c=>c.id===h.chal.id)?h.chal:nu
 function chalProg(h){const c=chalOf(h);if(!c)return 0;return h.checks.filter(d=>d>=c.start).length;}
 function chalCheck(h){const c=chalOf(h);if(!c)return;const C=CHALLENGES.find(x=>x.id===c.id);const t=today();
   if(schedOf(h).type!=='weekly'){let d=addDays(t,-1);while(d>=c.start){if(!isChecked(h,d)&&dueOn(h,d)&&!restOn(h,d)){h.chal=null;const m='「'+h.name+'」的'+C.name+'中斷了…沒關係，隨時可以重新開始！';log('🎯 '+m);toast(m);const r=R_(h.id);if(r)say(r,tone(h,'挑戰中斷了…不過我還想再試一次！'),'sad');saveSoon();return;}d=addDays(d,-1);}}
-  if(chalProg(h)>=C.len){h.chal=null;h.chalsDone=(h.chalsDone||[]).concat([C.id]);state.coins+=C.coins;statAdd('challenges');const m='🎯 挑戰成功！'+h.res.name+' 完成了「'+h.name+'」的'+C.name+'（+'+C.coins+' 金幣）';log(m);toast(m,true);
+  if(chalProg(h)>=C.len){lifeLog(h.id,'🎯','完成「'+h.name+'」'+C.name);h.chal=null;h.chalsDone=(h.chalsDone||[]).concat([C.id]);state.coins+=C.coins;statAdd('challenges');const m='🎯 挑戰成功！'+h.res.name+' 完成了「'+h.name+'」的'+C.name+'（+'+C.coins+' 金幣）';log(m);toast(m,true);
     addPhoto('ach',h.res.name+' 完成'+C.name,[h.id]);const r=R_(h.id);if(r){r.celebrate=4;showBub(r,'star',4);}renderTop();checkAch();saveSoon();}}
 function startChal(h,id){const C=CHALLENGES.find(x=>x.id===id);h.chal={id,start:today()};toast('開始「'+C.name+'」！'+C.len+' 天後見真章');const r=R_(h.id);if(r)say(r,tone(h,'好！'+C.name+'，我們一起完成它！'),'happy');saveSoon();if(curTab==='res')renderRes();}
 /* daily tasks (real days) */
@@ -2746,6 +2755,81 @@ function welcomeBack(sec,notes){if(sec<7200)return;const cand=RES.filter(r=>r.st
   const r=cand.map(x=>[x,habitById(x.id).fav]).sort((a,b)=>b[1]-a[1])[0][0];const h=habitById(r.id);const hrs=Math.round(sec/3600);
   const news=notes.filter(n=>!/^📬/.test(n)).slice(-2);const txt=(hrs>=20?'你終於回來了！我好想你～':'你回來啦！')+(news.length?'你不在的時候，'+news.map(x=>x.replace(/[。！]$/,'')).join('，還有')+'！':'家裡一切都很好喔！');
   setTimeout(()=>{select(r.id,false);showVN(r,tone(h,txt));setPemo(r,'love',8);r.celebrate=2.5;showBub(r,'heart',3);},900);}
+
+/* =========================================================
+   Life timeline, diaries, friendship events, family visits, troubles
+   ========================================================= */
+function lifeLog(id,icon,text){const h=habitById(id);if(!h)return;h.life=h.life||[];h.life.push({at:gameMin,icon,text});if(h.life.length>60)h.life.splice(0,h.life.length-60);}
+/* ---- diary: what each resident did today ---- */
+const ACT_WORD={eat:'吃飯',sleep:'',toilet:'',wash:'洗澡',desk:'用電腦',game:'打電動',roomtv:'看電視',read:'看書',lread:'看書',guitar:'彈吉他',easel:'畫畫',fit:'運動',run:'跑步',aqua:'看魚',plant:'澆花',plush:'抱娃娃',beanbag:'窩在懶骨頭',vanity:'打扮',piano:'彈鋼琴',coffee:'喝咖啡',bake:'烤餅乾',massage:'按摩',movie:'看電影',karaoke:'唱歌',tv:'看電視',music:'聽音樂',drink:'喝水',window:'看窗外',meditate:'冥想',garden:'整理庭院',feedpet:'餵寵物',walkdog:'遛狗',babycare:'照顧孩子',outing:'逛街',work:'工作',party:'參加派對'};
+function dayNote(r){if(!r.today)r.today={acts:{},with:{},ev:[]};return r.today;}
+function writeDiaries(day){for(const r of RES){const h=habitById(r.id);if(!h)continue;const D=r.today;r.today={acts:{},with:{},ev:[]};if(!D)continue;
+  const acts=Object.entries(D.acts).filter(([k])=>ACT_WORD[k]).sort((a,b)=>b[1]-a[1]).slice(0,3).map(([k])=>ACT_WORD[k]);
+  const friend=Object.entries(D.with).sort((a,b)=>b[1]-a[1])[0];const w=state.weather&&state.weather.day===day?WEATHER[state.weather.kind].name:'';
+  const P=persOf(h);const m=r.needs.mood;const feel=m>75?choice(['今天好開心！','是很棒的一天。','心情超好～']):m>45?choice(['普普通通的一天。','還不錯的一天。']):choice(['今天有點累…','心情悶悶的。','希望明天會更好。']);
+  const parts=[];if(D.acts.work)parts.push(choice(['今天去上班了','今天工作了一整天'])+(m<45?'，好累。':'，還算順利。'));
+  if(acts.length)parts.push('今天'+acts.filter(a=>a!=='工作').join('、')+'。');if(friend)parts.push('和'+friend[0]+'一起度過了一段時間'+(relGet(r.id,(RES.find(x=>x.name===friend[0])||{}).id||'').aff>60?'，好開心':'')+'。');
+  for(const e of D.ev.slice(0,2)){let x=e.replace(/^[^\u4e00-\u9fffA-Za-z0-9]+\s*/,'').replace(new RegExp('(^|\\s)'+r.name+'(\\s|$)','g'),'$1我$2').replace(/\s+/g,'').replace(/[。！]?$/,'。');parts.push(x);}
+  parts.push(isChecked(h,today())?'「'+h.name+'」今天也完成了！':isActive(h)?'「'+h.name+'」還要再加油。':'好久沒做「'+h.name+'」了…');
+  const nt=h.notes&&(h.notes[today()]||h.notes[addDays(today(),-1)]);if(nt&&nt.t)parts.push('主人說「'+nt.t+'」，我會記住的。');
+  h.diary=(h.diary||[]).concat([{day,w,text:tone(h,parts.join('')+feel)}]).slice(-20);}}
+/* ---- friendship events ---- */
+function friendEvents(){const day=houseDay();const pairs=[];for(const k in state.rel){const rel=state.rel[k];if(rel.stage<3||rel.stage>=5||rel.ex)continue;const[a,b]=k.split('|');if(habitById(a)&&habitById(b))pairs.push([a,b,rel]);}
+  if(!pairs.length||Math.random()>.25)return;const[a,b,rel]=choice(pairs);const A=nameOf(a),B=nameOf(b);const ra=R_(a),rb=R_(b);const ha=habitById(a),hb=habitById(b);const kind=Math.random();
+  if(kind<.18&&ra&&rb&&ra.state!=='away'&&rb.state!=='away'&&(ha.money||0)>=80&&(hb.money||0)>=80&&!workingNow(ha)&&!workingNow(hb)){ha.money-=80;hb.money-=80;
+    for(const[x,o]of[[ra,rb],[rb,ra]]){abortPlan(x);x.plan=[st('exit',1,{txt:'和'+o.name+'出發去旅行',essential:true,leave:{kind:'trip',until:gameMin+1440,txt:'和'+o.name+'去旅行'}})];x.planAct='trip';x.tries=0;nextStep(x);}
+    relAdd(a,b,10);const m='👫 '+A+' 和 '+B+' 這對好朋友一起出發去小旅行了！';log(m);lifeLog(a,'🧳','和好朋友 '+B+' 去旅行');lifeLog(b,'🧳','和好朋友 '+A+' 去旅行');addPhoto('party',A+' 和 '+B+' 的好友旅行',[a,b]);}
+  else if(kind<.6){relAdd(a,b,6);const what=choice(['一起熬夜追完了一整季的劇','互相交換了日記本','一起去吃了吃到飽','在頂樓聊心事聊到天亮','一起完成了一幅拼圖']);log('👫 '+A+' 和 '+B+' '+what);dayNote(ra||{}).ev&&ra&&dayNote(ra).ev.push(A+'和'+B+what);}
+  else{const gift=choice(['手作杯墊','好看的明信片','一盒巧克力','暖暖的圍巾']);relAdd(a,b,5);log('🎁 '+A+' 送了'+gift+'給好朋友 '+B+'，說謝謝'+(hb.gender==='m'?'他':'她')+'一直陪著自己');}}
+function apologyLater(a,b){setTimeout(()=>{if(!habitById(a)||!habitById(b))return;const rel=relGet(a,b);if(rel.stage<2||rel.ex)return;relAdd(a,b,8);log('💌 '+nameOf(a)+' 寫了一封道歉信給 '+nameOf(b)+'，兩人和好了');},0);}
+/* ---- family visits (the residents' in-game families) ---- */
+const FAM_NAMES={tw:{f:['美玲','淑芬','雅婷','秀英','麗華','怡君'],m:['志明','建國','家豪','文雄','俊傑','國華']},jp:{f:['由美子','直子','惠子','真理'],m:['健一','誠','浩二','隆']},kr:{f:['美英','恩靜','順子'],m:['成浩','東俊','永哲']}};
+const FAM_TITLES=[['媽媽','f','parent'],['爸爸','m','parent'],['奶奶','f','grand'],['爺爺','m','grand'],['哥哥','m','sib'],['姊姊','f','sib'],['弟弟','m','sib'],['妹妹','f','sib']];
+function familyOf(h){if(h.family&&h.family.length&&h.famV===2)return h.family;h.famV=2;const cc=(h.res.look.country)||'tw';const v=hashStr(h.id);const out=[];
+  const picks=[0,1,2+(v%2),4+(v>>3)%4];for(const i of picks){const[title,g,kind]=FAM_TITLES[i];const L=localize(randLook(g),g,cc,false);if(kind==='grand')L.hair=choice(['#e9e6f0','#c8c8cc','#d8d4cc']);
+    if(kind==='parent'&&Math.random()<.4)L.hair=mix(L.hair,'#c8c8cc',.35);L.skin=h.res.look.skin;const FN=FAM_NAMES[cc];out.push({title,g,kind,name:FN?choice(FN[g]):nameFor(g,cc),look:L});}
+  h.family=out;return out;}
+let VIS=[];
+function scheduleVisit(h){const fam=familyOf(h);const m=choice(fam);const day=houseDay()+1;state.visits=(state.visits||[]).filter(v=>v.day>=houseDay());if(state.visits.some(v=>v.host===h.id))return;
+  state.visits.push({host:h.id,idx:fam.indexOf(m),day,hour:10+Math.floor(Math.random()*6)});
+  sendLetter('visit',h.id,tone(h,'我'+m.title+'「'+m.name+'」明天要從'+countryOf(h).n+'來看我！好期待～'),['太好了！幫忙準備點心（10 金幣）','好啊，歡迎！'],{title:m.title},1,[10,0]);}
+Object.assign(LETTERS,{visit:{run(L,i){const h=habitById(L.from);if(i===0){const v=(state.visits||[]).find(x=>x.host===h.id);if(v)v.snack=true;favAdd(h.id,4);return h.res.name+' 說：「謝謝你！'+L.data.title+'一定會很開心！」';}return '';}}});
+function visitTick(){const day=houseDay(),hr=hour();for(const v of(state.visits||[]).slice()){if(v.day!==day||hr<v.hour||v.started)continue;const h=habitById(v.host);if(!h){v.started=true;continue;}const m=familyOf(h)[v.idx];if(!m){v.started=true;continue;}
+    v.started=true;useFloor(0);const vis={id:uidGen('v'),host:h.id,m,f:0,tx:EXIT[0],ty:EXIT[1],px:(EXIT[0]+.5)*T,py:(EXIT[1]+.5)*T,path:[],wait:0,walkT:0,state:'stay',until:gameMin+rand(150,240),bub:'heart',bubT:3,dir:1,snack:v.snack};
+    VIS.push(vis);const msg='🏠 '+h.res.name+' 的'+m.title+'「'+m.name+'」來小屋玩了！';log(msg);if(!CATCHING)toast(msg,true);lifeLog(h.id,'🏠',m.title+' '+m.name+' 來看我');
+    const r=R_(h.id);if(r){r.needs.mood=clamp(r.needs.mood+20,0,100);showBub(r,'heart',3);if(r.state!=='away'&&!(r.step&&r.step.sleep)){abortPlan(r);r.wait=2;}}
+    if(v.snack){for(const x of RES)x.needs.hunger=clamp(x.needs.hunger+15,0,100);log(m.title+' 帶了家鄉的'+countryOf(h).food.split('和')[0]+'，大家吃得好開心');}
+    addPhoto('holiday',h.res.name+' 和'+m.title+' '+m.name,[h.id]);}
+  state.visits=(state.visits||[]).filter(v=>v.day>=day&&!v.started||v.day>day);}
+function updateVisitor(v,dtR,dtG){if(v.bubT>0){v.bubT-=dtR;if(v.bubT<=0)v.bub=null;}const host=R_(v.host);
+  if(v.state==='stay'&&(gameMin>=v.until||!host)){v.state='leave';if(v.f!==0){v.f=0;v.tx=STAIRS[0];v.ty=STAIRS[1];v.px=(v.tx+.5)*T;v.py=(v.ty+.5)*T;}useFloor(0);const p=bfs(v.tx,v.ty,EXIT[0],EXIT[1]);v.path=p||[];
+    if(host){showBub(host,'sad',2);log(v.m.title+' '+v.m.name+' 回家了，'+nameOf(v.host)+' 依依不捨地送到門口');}}
+  if(v.state==='leave'&&!v.path.length){v.gone=true;return;}
+  useFloor(v.f);
+  if(v.path.length){let left=1.2*T*dtR*Math.sqrt(speed);while(left>0&&v.path.length){const[nx,ny]=v.path[0];const tx=(nx+.5)*T,ty=(ny+.5)*T;const dx=tx-v.px,dy=ty-v.py;const dd=Math.abs(dx)+Math.abs(dy);
+      if(Math.abs(dx)>.01)v.dir=dx>0?1:-1;if(dd<=left){v.px=tx;v.py=ty;v.tx=nx;v.ty=ny;v.path.shift();left-=dd;}else{const mx=Math.sign(dx)*Math.min(Math.abs(dx),left);v.px+=mx;v.py+=Math.sign(dy)*Math.min(Math.abs(dy),Math.max(0,left-Math.abs(mx)));left=0;}}
+    v.walkT+=dtR*5;return;}
+  if(v.state!=='stay')return;v.wait-=dtR*2*speed;if(v.wait>0)return;v.wait=rand(5,14);
+  if(host&&host.state!=='away'&&host.state!=='stairs'){if(host.f!==v.f){const t=freeTileNear(host.f,host.tx,host.ty,2)||[host.tx,host.ty];v.f=host.f;v.tx=t[0];v.ty=t[1];v.px=(t[0]+.5)*T;v.py=(t[1]+.5)*T;return;}
+    const gx=host.tx+choice([-1,1]),gy=host.ty+choice([-1,0,1]);if(gx>=0&&gy>=0&&gx<L.W&&gy<L.D&&!blocked[gy][gx]&&L.cell[gy][gx]>=0){const p=bfs(v.tx,v.ty,gx,gy);if(p&&p.length<40)v.path=p;}
+    if(Math.random()<.5){v.bub=choice(['heart','chat','smile','food']);v.bubT=2;showBub(host,choice(['heart','smile','chat']),2);host.needs.mood=clamp(host.needs.mood+3,0,100);}}
+  else{useFloor(0);const gx=10+Math.floor(Math.random()*10),gy=1+Math.floor(Math.random()*5);if(!blocked[gy][gx]){const p=bfs(v.tx,v.ty,gx,gy);if(p&&p.length<40)v.path=p;}}}
+function visitorsUpdate(dtR,dtG){for(const v of VIS)guard('visitor',()=>updateVisitor(v,dtR,dtG));VIS=VIS.filter(v=>!v.gone);}
+const VIS_LINES=['謝謝你一直照顧我們家{H}！','{H}小時候很愛哭，現在長大了呢。','這個家好溫暖，{H}住在這裡我就放心了。','我帶了家鄉的點心，大家一起吃吧！'];
+/* ---- troubles: residents ask for help with a problem ---- */
+const TROUBLES=[
+  {id:'boss',text:'今天在公司被主管罵了…我是不是很沒用？',opts:['陪他吐苦水','幫他想解決辦法','叫他別放在心上'],best:{0:['gentle','shy','gloomy','clingy','romantic','artsy'],1:['perfect','workaholic','boss','calm','curious'],2:['lazy','sunny','funny','airhead','narcissist']},need:h=>jobOf(h).days.length},
+  {id:'lost',text:'我找不到奶奶送我的手鍊…那是很重要的東西…',opts:['陪他一起翻箱倒櫃','買一條新的送他（20 金幣）','安慰他東西總會找到'],best:{0:['helpful','perfect','calm','gentle'],1:['spender','narcissist','romantic'],2:['sunny','airhead','lazy','funny']},cost:[0,20,0]},
+  {id:'nervous',text:'下週有一個很重要的考試，我緊張到睡不著…',opts:['幫他模擬練習','帶他出去走走放鬆','跟他說你一定可以'],best:{0:['perfect','workaholic','calm','curious','boss'],1:['lazy','sporty','sunny','early','owl'],2:['shy','gloomy','gentle','clingy','passion']}},
+  {id:'home',text:'跟家人通電話的時候吵架了…我好難過。',opts:['勸他打電話和好','安靜聽他說','建議他寫一封信給家人'],best:{0:['sunny','passion','helpful','boss'],1:['shy','gloomy','calm','mystic','gentle'],2:['artsy','romantic','tsun','perfect']}},
+  {id:'lonely',text:'最近覺得好孤單，好像沒有人懂我…',opts:['約他明天一起吃飯','跟他聊一整個晚上','介紹新朋友給他'],best:{0:['foodie','sunny','clingy','sporty'],1:['shy','gloomy','romantic','artsy','mystic'],2:['funny','curious','helpful','narcissist']}},
+  {id:'heart',text:'我被喜歡的人拒絕了…心好痛。',opts:['陪他大吃一頓','讓他自己靜一靜','帶他去唱歌發洩'],best:{0:['foodie','sunny','clingy','lazy'],1:['calm','mystic','tsun','perfect','gloomy'],2:['passion','funny','narcissist','sporty']}}];
+function sendTrouble(h){if(letterPending('trouble',h.id))return;const pool=TROUBLES.filter(t=>!t.need||t.need(h));const T0=choice(pool);const P=persOf(h);
+  const score=[0,1,2].map(i=>P.keys.filter(k=>(T0.best[i]||[]).includes(k)).length);const best=score.indexOf(Math.max(...score));
+  sendLetter('trouble',h.id,tone(h,T0.text),T0.opts.slice(),{tid:T0.id,best},2,T0.cost||null);}
+Object.assign(LETTERS,{trouble:{run(L,i){const h=habitById(L.from);const T0=TROUBLES.find(t=>t.id===L.data.tid);
+  if(i===L.data.best){favAdd(h.id,10);moodAdd(h.id,25);lifeLog(h.id,'🤝','主人幫我度過了難關（'+T0.text.slice(0,10)+'…）');statAdd('helped');return h.res.name+' 說：「謝謝你…你真的很懂我。」（好感大幅提升）';}
+  favAdd(h.id,3);moodAdd(h.id,8);return h.res.name+' 說：「嗯…謝謝你。」好像有好一點了';}}});
 
 /* ---------- per-frame resident update ---------- */
 function updateResident(r,dtR,dtG){
@@ -2788,7 +2872,9 @@ function updateResident(r,dtR,dtG){
   if(r.plan.length){nextStep(r);return;}
   decide(r);
 }
-function log(t){const hh=Math.floor(hour()),mm=Math.floor((gameMin%60)/10)*10;feed.unshift({t:String(hh).padStart(2,'0')+':'+String(mm).padStart(2,'0'),text:t});if(feed.length>14)feed.pop();feedDirty=true;}
+const NOTABLE=/約了|一起|送了|送給|買了|吵|告白|交往|結婚|懷孕|旅行|生日|升職|收成|夢想|和好|分手|離婚|寶寶|出生|領養|來小屋|道歉|冠軍|贏|獲得|完成了一幅|烤了/;
+function log(t){if(typeof RES!=='undefined'&&NOTABLE.test(t)&&!/^(★|✉|📅)/.test(t))for(const r of RES)if(t.startsWith(r.name)||t.includes(' '+r.name+' ')){const D=dayNote(r);if(D.ev.length<3&&!D.ev.includes(t))D.ev.push(t);break;}
+  const hh=Math.floor(hour()),mm=Math.floor((gameMin%60)/10)*10;feed.unshift({t:String(hh).padStart(2,'0')+':'+String(mm).padStart(2,'0'),text:t});if(feed.length>14)feed.pop();feedDirty=true;}
 
 /* =========================================================
    Talking with residents
@@ -3130,7 +3216,7 @@ function render(t){
   useFloor(viewFloor);g=sctx;OX=BASE_OX;OY=BASE_OY;g.imageSmoothingEnabled=false;drawSky(t);g.drawImage(staticCv,0,0);drawWalls(t);drawGarden(t);
   if((FX.leak[viewFloor]||0)>gameMin){for(let i=0;i<10;i++){const x=21*T+4+Math.floor(hash(i,2,3)*100),y=2*T+Math.floor(hash(3,i,2)*56);g.globalAlpha=.55;faceZ(1,x,x+10+(i%3)*4,y,y+6,'#7fc8f0');g.globalAlpha=1;}
     for(let i=0;i<4;i++){const k=(t*20+i*9)%40;px(...scr(22*T+i*20,T,40-Math.floor(k)),'#7fc8f0');}}
-  const chars=visibleRes().map(r=>({r,info:charScreen(r)})).concat(BABIES.filter(b=>(b.f||0)===viewFloor).map(b=>({baby:b,info:{x:b.px,y:b.py,z:b.inCrib?7:0,pose:'baby'}}))).concat(viewFloor===0?PETS.filter(p=>!(p.p.away>gameMin)).map(p=>({pet:p,info:{x:p.px,y:p.py,z:0,pose:'baby'}})):[]);
+  const chars=visibleRes().map(r=>({r,info:charScreen(r)})).concat(VIS.filter(v=>v.f===viewFloor).map(v=>({vis:v,info:{x:v.px,y:v.py,z:0,pose:'baby'}}))).concat(BABIES.filter(b=>(b.f||0)===viewFloor).map(b=>({baby:b,info:{x:b.px,y:b.py,z:b.inCrib?7:0,pose:'baby'}}))).concat(viewFloor===0?PETS.filter(p=>!(p.p.away>gameMin)).map(p=>({pet:p,info:{x:p.px,y:p.py,z:0,pose:'baby'}})):[]);
   for(const c of chars){const i=c.info;const[sx,sy]=scr(i.x,i.y,i.z);c.sx=sx;c.sy=sy;c.cx=i.x/T;c.cy=i.y/T;c.depth=c.cx+c.cy;c.bb=[sx-OX-8,sy-OY-30,sx-OX+8,sy-OY+2];let idx=-1;
     for(let k=0;k<OBJ.length;k++){const o=OBJ[k],b=o.bb;if(b[2]<c.bb[0]||b[0]>c.bb[2]||b[3]<c.bb[1]||b[1]>c.bb[3])continue;const[x0,y0,x1,y1]=o.fp;
       const inside=c.cx>x0&&c.cx<x1&&c.cy>y0&&c.cy<y1;if(inside||c.cx>=x1-.001||c.cy>=y1-.001)idx=k;}c.idx=idx;}
@@ -3152,6 +3238,7 @@ function render(t){
 }
 function hexA(h,a){const[r,g2,b]=hexToRgb(h);return`rgba(${r},${g2},${b},${a})`;}
 function drawChar(c,t){
+  if(c.vis){const v=c.vis;g.globalAlpha=.22;fr(c.sx-4,c.sy-1,9,2,'#1a1424');g.globalAlpha=1;const sp=sprite(v.m.look,'stand',v.dir>0?'SE':'SW',v.path.length?Math.floor(v.walkT)%4:0,null,'happy',false,(v.m.g==='f'?'f':'')+'L0');g.drawImage(sp,c.sx-AX,c.sy-AY+1);return;}
   if(c.pet){const pt=c.pet;g.globalAlpha=.22;fr(c.sx-4,c.sy-1,9,2,'#1a1424');g.globalAlpha=1;const sp=petSprite(pt.p.kind,pt.p.col,Math.floor(pt.walkT||0)%2);
     if(pt.dir<0){g.save();g.translate(c.sx,0);g.scale(-1,1);g.drawImage(sp,-9,c.sy-14);g.restore();}else g.drawImage(sp,c.sx-9,c.sy-14);return;}
   if(c.baby&&c.baby.sleep){const b=c.baby;const ks=kidStage(b.b);
@@ -3176,9 +3263,10 @@ function drawChar(c,t){
   g.drawImage(sprite(r.look,i.pose,i.dir,i.frame,i.prop,i.eyes,i.gray,i.flags),c.sx-AX,c.sy-AY+1+bob);
   if(r.state==='act'&&r.spot&&r.spot.kind==='shower')for(let k=0;k<8;k++){const kk=(t*24+k*5)%22;px(c.sx-5+((k*3)%11),c.sy-26+Math.floor(kk),'#a8e0ff');}
 }
-function headY(c){const i=c.info;if(c.pet)return c.sy-8;if(c.baby){const ks=kidStage(c.baby.b);return c.sy-(ks===0?12:ks===1?16:20);}return c.sy-(i.pose==='lie'?9:i.pose==='sit'||i.pose==='floor'?18:22)+(i.special?5:0);}
+function headY(c){const i=c.info;if(c.vis)return c.sy-22;if(c.pet)return c.sy-8;if(c.baby){const ks=kidStage(c.baby.b);return c.sy-(ks===0?12:ks===1?16:20);}return c.sy-(i.pose==='lie'?9:i.pose==='sit'||i.pose==='floor'?18:22)+(i.special?5:0);}
 function drawOverlay(c,t){
   const hy=headY(c);
+  if(c.vis){const v=c.vis;if(v.bub&&v.bubT>0)drawBubble(c.sx,hy+2,v.bub,Math.min(1,v.bubT*3));fr(c.sx-1,hy-14,3,3,'#f59ac0');return;}
   if(c.pet){const b=c.pet;if(b.id===selected){const k=Math.floor(t*3)%2;fr(c.sx-2,hy-8-k,5,1,'#f4b41a');fr(c.sx-1,hy-7-k,3,1,'#f4b41a');}if(b.bub&&b.bubT>0)drawBubble(c.sx,hy+2,b.bub,Math.min(1,b.bubT*3));return;}
   if(c.baby){const b=c.baby;if(b.id===selected){const k=Math.floor(t*3)%2;fr(c.sx-2,hy-8-k,5,1,'#f4b41a');fr(c.sx-1,hy-7-k,3,1,'#f4b41a');}if(b.bub&&b.bubT>0)drawBubble(c.sx,hy+2,b.bub,Math.min(1,b.bubT*3));return;}
   const r=c.r;const h=habitById(r.id);const lv=h?levelOf(h):0;
@@ -3292,7 +3380,7 @@ function blit(){
     const X=ox+sx*zoom,Y=oy+(sy+16)*zoom;vctx.fillStyle='rgba(25,27,43,.75)';const s='＋ 新增習慣入住';const w=vctx.measureText(s).width+10*dpr;vctx.fillRect(Math.round(X-w/2),Math.round(Y-fs*.7),Math.round(w),Math.round(fs*1.4));vctx.fillStyle='#f4b41a';vctx.fillText(s,Math.round(X),Math.round(Y));}
 }
 function toScene(cx,cy){const ox=Math.round(VW/2-camX*zoom),oy=Math.round(VH/2-camY*zoom);return[(cx*dpr-ox)/zoom,(cy*dpr-oy)/zoom];}
-function hitChar(sx,sy){OX=BASE_OX;OY=BASE_OY;if(viewFloor===0){for(const p of PETS){if(p.p.away>gameMin)continue;const[x,y]=scr(p.px,p.py,0);if(sx>=x-7&&sx<=x+7&&sy>=y-11&&sy<=y+2)return{pet:p};}}for(const b of BABIES){if((b.f||0)!==viewFloor)continue;const[x,y]=scr(b.px,b.py,b.inCrib?7:0);const tall=b.sleep?10:[13,18,24,24][kidStage(b.b)];if(sx>=x-7&&sx<=x+7&&sy>=y-tall&&sy<=y+3)return{baby:b};}
+function hitChar(sx,sy){OX=BASE_OX;OY=BASE_OY;for(const v of VIS){if(v.f!==viewFloor)continue;const[x,y]=scr(v.px,v.py,0);if(sx>=x-7&&sx<=x+7&&sy>=y-24&&sy<=y+3)return{vis:v};}if(viewFloor===0){for(const p of PETS){if(p.p.away>gameMin)continue;const[x,y]=scr(p.px,p.py,0);if(sx>=x-7&&sx<=x+7&&sy>=y-11&&sy<=y+2)return{pet:p};}}for(const b of BABIES){if((b.f||0)!==viewFloor)continue;const[x,y]=scr(b.px,b.py,b.inCrib?7:0);const tall=b.sleep?10:[13,18,24,24][kidStage(b.b)];if(sx>=x-7&&sx<=x+7&&sy>=y-tall&&sy<=y+3)return{baby:b};}
   for(const r of visibleRes()){const i=charScreen(r);const[x,y]=scr(i.x,i.y,i.z);const top=i.pose==='lie'?y-12:y-24;if(sx>=x-8&&sx<=x+8&&sy>=top&&sy<=y+3)return{r};}return null;}
 function hitRoom(sx,sy){useFloor(viewFloor);const[x,y]=tileAt(sx,sy);return roomAt(x,y);}
 const ptrs=new Map();let dragStart=null,pinch=null,moved=false;
@@ -3314,7 +3402,7 @@ function endPtr(e){if(!ptrs.has(e.pointerId))return;ptrs.delete(e.pointerId);sta
   if(ptrs.size===0){if(!moved&&dragStart){const rect=stage.getBoundingClientRect();const[sx,sy]=toScene(e.clientX-rect.left,e.clientY-rect.top);
       if(build.on){if(build.ghost){const gh=build.ghost;const before=JSON.stringify([gh.tx,gh.ty,gh.slot]);if(dragStart.type!=='mouse'){ghostAt(sx,sy);if(JSON.stringify([gh.tx,gh.ty,gh.slot])!==before){dragStart=null;return;}}else ghostAt(sx,sy);placeGhost();}
         else{const p=placedAt(sx,sy);build.sel=p?p.u:null;renderBuildBar();}}
-      else{const hit=hitChar(sx,sy);if(hit){select(hit.r?hit.r.id:hit.pet?hit.pet.id:hit.baby.id,true);}else{const rm=hitRoom(sx,sy);if(rm&&rm.type==='bed'){const h=SLOT[rm.slot];if(h)select(h.id,true);else if(state.habits.length<MAXH)openHabit(null);}}}}
+      else{const hit=hitChar(sx,sy);if(hit&&hit.vis){const v=hit.vis;v.bub='smile';v.bubT=2;toast(nameOf(v.host)+' 的'+v.m.title+'「'+v.m.name+'」：'+choice(VIS_LINES).replace('{H}',nameOf(v.host)));}else if(hit){select(hit.r?hit.r.id:hit.pet?hit.pet.id:hit.baby.id,true);}else{const rm=hitRoom(sx,sy);if(rm&&rm.type==='bed'){const h=SLOT[rm.slot];if(h)select(h.id,true);else if(state.habits.length<MAXH)openHabit(null);}}}}
     dragStart=null;}}
 stage.addEventListener('pointerup',endPtr);stage.addEventListener('pointercancel',endPtr);
 stage.addEventListener('pointerleave',()=>{$('#tip').hidden=true;});
@@ -3352,6 +3440,7 @@ function simStep(dt){
   for(const r of RES){if(!guard('resident',()=>updateResident(r,dt,dtG))){r.plan=[];r.step=null;r.state='idle';r.spot=null;r.path=[];r.wait=3;r.goF=null;}}
   for(const b of BABIES)guard('baby',()=>updateBaby(b,dt,dtG));
   for(const pt of PETS)guard('pet',()=>updatePet(pt,dt,dtG));
+  if(VIS.length)visitorsUpdate(dt,dtG);
   guard('social',()=>socialTick(dt,dtG));
   guard('events',()=>{
     const hr=Math.floor(gameMin/60);if(hr!==lastRelHour){if(lastRelHour>=0){relTick();if(Math.random()<.18)pairEvent();eventsHourly();letterTick();expireLetters();}lastRelHour=hr;}
@@ -3549,6 +3638,10 @@ function renderRes(){
     const bar=el('div','bar pink');const bi=el('i');bi.dataset.rel=o.id;bi.style.width=rel.aff+'%';bar.append(bi);mid.append(tt,bar);
     li.append(c,mid,el('span','status'+(rel.stage>=4?' love':''),stageName(rel)));li.style.cursor='pointer';li.onclick=()=>select(o.id,true);rels.append(li);}
   if(RES.length<2)rels.innerHTML='<li class="empty">再新增一位居民，他們就會開始互動、交朋友，甚至談戀愛。</li>';
+  const tlx=document.createElement('details');tlx.className='secrets';tlx.append(el('summary',null,'📜 人生時間軸（'+(h.life||[]).length+'）'));
+  {const ul=el('ul','timeline');const lf=(h.life||[]).slice().reverse();if(!lf.length)ul.append(el('li','empty','人生故事才剛開始…'));for(const e of lf)ul.append(el('li',null,e.icon+' '+calStr(e.at,false)+'　'+e.text));tlx.append(ul);}
+  const dy=document.createElement('details');dy.className='secrets';dy.append(el('summary',null,'📔 偷看日記（'+(h.diary||[]).length+'）'));
+  {const ul=el('ul','timeline');const ds=(h.diary||[]).slice().reverse();if(!ds.length)ul.append(el('li','empty','明天開始，'+h.res.name+' 每天晚上都會寫日記。'));for(const e of ds)ul.append(el('li',null,dayStr(e.day)+(e.w?' '+e.w:'')+'：'+e.text));dy.append(ul);}
   const sec=document.createElement('details');sec.className='secrets';const sm=el('summary',null,'他告訴你的悄悄話（'+(h.secrets||[]).length+'）');sec.append(sm);
   if((h.secrets||[]).length){const ul=el('ul');for(const s1 of h.secrets.slice().reverse())ul.append(el('li',null,s1));sec.append(ul);}else sec.append(el('p','empty',h.fav>=40?'他頭上出現粉紅色的悄悄話泡泡時點他，或問他「有什麼秘密嗎？」':'好感達到 40 以上，他才會偷偷跟你說秘密。'));
   const cal=el('div','cal');const t=today();
@@ -3572,7 +3665,7 @@ function renderRes(){
       const gv=el('button','btn sm','放棄挑戰');gv.type='button';gv.onclick=()=>confirmDo('確定要放棄「'+C.name+'」嗎？',()=>{h.chal=null;saveSoon();renderRes();});cc.append(bar,el('span',null,'已完成 '+Math.min(pr,C.len)+' / '+C.len+' 次・完成獎勵 '+C.coins+' 金幣・中途斷掉就要重來（休息券可以保護）'),document.createTextNode(' '),gv);}
     else{cc.append(el('b',null,'🎯 習慣挑戰'),document.createElement('br'));const row=el('div','lopts');for(const C of CHALLENGES){const b=el('button','btn sm',C.name+'（'+C.coins+'）');b.type='button';b.onclick=()=>startChal(h,C.id);row.append(b);}cc.append(row);
       if((h.chalsDone||[]).length)cc.append(el('small',null,'已完成：'+h.chalsDone.map(id=>CHALLENGES.find(x=>x.id===id).name).join('、')));}}
-  p.append(head,pers,jc,cc,...(hm?[hm]:[]),...(kc?[kc]:[]),dm,lvc,mood,doing,needs,H('叫他去做'),cmds,H('聊天'),chat,typing,form,quick,ai,H('好感與人際'),gift,rels,sec,H('打卡紀錄'),cal,cl,row);
+  p.append(head,pers,jc,cc,...(hm?[hm]:[]),...(kc?[kc]:[]),dm,lvc,mood,doing,needs,H('叫他去做'),cmds,H('聊天'),chat,typing,form,quick,ai,H('好感與人際'),gift,rels,tlx,dy,sec,H('打卡紀錄'),cal,cl,row);
   chat.scrollTop=chat.scrollHeight;liveUI();
 }
 function liveUI(){
@@ -3734,6 +3827,7 @@ $('#habitForm').onsubmit=e=>{e.preventDefault();const name=$('#hName').value.tri
     const sig=sigOf(name);const list=[];for(const k of['bed','wardrobe']){if(state.inv[k]>0)state.inv[k]--;list.push(k);}if(sig&&sig.item)list.push(sig.item);state.pendingDefaults[h.id]=list;
     for(const o of state.habits)if(o!==h)relGet(h.id,o.id);
     selected=h.id;rebuild();setView(floorOfSlot(slot));const r=RES.find(x=>x.id===h.id);if(r){r.celebrate=2.5;showBub(r,'heart',3);}
+    lifeLog(h.id,'🏠','搬進小屋 '+(floorOfSlot(slot)+1)+' 樓，開始「'+name+'」');if(job!=='none')lifeLog(h.id,'💼','工作：'+JOBS[job].name);
     if(newFloor){const m='小屋蓋好了第 '+(floorOfSlot(slot)+1)+' 樓！';log(m);toast(m,true);}
     log(rn+' 搬進了 '+(floorOfSlot(slot)+1)+' 樓'+(sig&&sig.item?'，還帶了'+CAT[sig.item].name:''));if(!newFloor)toast(rn+' 搬進來了！'+(sig&&sig.item?'附贈：'+CAT[sig.item].name:''));
     if(fromBaby){kidMovedIn(h,fromBaby);fromBaby=null;rebuild();}
