@@ -319,6 +319,16 @@ button.chip.mail{background:#e9f3ff;color:var(--ink);position:relative}
 .wkr i.on{background:var(--green)}.wkr i.fut{background:#eee;border-style:dashed}.wkr i.h{border:0;background:none}
 .dreamcard{font-size:12px;border:2px solid var(--ink);padding:6px 8px;margin:8px 0;background:#f4f0ff}
 .dreamcard .bar{margin:4px 0}
+.moods{display:flex;gap:6px;flex-wrap:wrap}.mood{font-size:22px;line-height:1;padding:6px 8px;border:2px solid var(--ink);background:#fff;cursor:pointer;opacity:.75}.mood.on{background:#ffe9a8;opacity:1;transform:translateY(-2px)}.moods.static .mood{font-size:15px;opacity:1;cursor:default}
+.moodnote{width:100%;margin-top:8px}#dayPanel .fbtns{margin-top:8px}
+.mcal{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin:8px 0}.mcal .h{font-style:normal;text-align:center;font-size:12px;color:var(--muted)}.mc{position:relative;border:2px solid var(--ink);background:#fff;min-height:48px;padding:2px;display:flex;flex-direction:column;align-items:center;cursor:pointer;font:inherit}.mc small{align-self:flex-start;font-size:10px}.mc b{font-size:18px;line-height:1.1}.mc u{position:absolute;left:0;bottom:0;height:4px;background:var(--green,#5cb85c)}.mc.today{background:#fff6d6}.mc.sel{outline:3px solid #e8a33d}.mc.fut{opacity:.35;cursor:default}
+.mbars .mb,.stat .mb{display:grid;grid-template-columns:minmax(80px,auto) 1fr auto;gap:8px;align-items:center;font-size:13px}.mb em{font-style:normal;color:var(--muted);font-size:12px}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:8px 0}.kpi{border:2px solid var(--ink);background:#fff;padding:6px;text-align:center}.kpi b{display:block;font-size:20px}.kpi span{font-size:11px;color:var(--muted)}
+.trend{display:flex;align-items:flex-end;gap:2px;height:80px;border-bottom:2px solid var(--ink);margin-top:6px}.trend i{flex:1;background:#7cc26b;position:relative;min-width:3px}.trend i.fut{background:#ddd}.trend.yr i small{position:absolute;bottom:-16px;left:0;right:0;text-align:center;font-size:10px;font-style:normal}.trend.yr{margin-bottom:16px}
+.focusw{position:fixed;right:16px;bottom:16px;z-index:60;width:260px;background:#fffdf5;border:3px solid var(--ink);box-shadow:4px 4px 0 var(--ink);padding:8px;display:grid;grid-template-columns:56px 1fr;gap:4px 8px;align-items:center}.focusw .fav{width:56px;height:56px;overflow:hidden;border:2px solid var(--ink);background:#f3e7cf}.focusw .fav img,.focusw .fav svg,.fp .fav img,.fp .fav svg{width:100%;height:auto;display:block}
+.focusw .fi{display:flex;flex-direction:column}.focusw .fi b{font-size:13px}.focusw .ftm{font-size:26px;font-weight:700;font-variant-numeric:tabular-nums}.focusw .fi em{font-style:normal;font-size:11px;color:var(--muted)}.focusw .fsay,.focusw .prog,.focusw .lopts{grid-column:1/-1}.focusw .fsay{font-size:12px}.focusw[hidden]{display:none}
+.fpick{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:6px;margin:8px 0}.fp{border:2px solid var(--ink);background:#fff;padding:4px;display:flex;flex-direction:column;align-items:center;gap:2px;font:inherit;cursor:pointer}.fp.on{background:#ffe9a8;box-shadow:inset 0 0 0 2px #e8a33d}.fp .fav{width:56px;height:56px;overflow:hidden}.fp span{font-size:11px;color:var(--muted);text-align:center}
+@media (max-width:700px){.focusw{left:16px;right:16px;width:auto;bottom:12px}.kpis{grid-template-columns:repeat(2,1fr)}}
 .fgroup{margin-bottom:10px}.fgroup h3{font-size:13px;margin:0 0 6px;color:var(--muted)}
 .tabs button{padding-left:4px;padding-right:4px}
 .town{position:relative;width:100%;margin-bottom:8px;border:2px solid var(--ink)}.town canvas{width:100%;display:block;image-rendering:pixelated}
@@ -389,13 +399,14 @@ button.chip.mail{background:#e9f3ff;color:var(--ink);position:relative}
           <ul class="habits" id="habitList"></ul>
           <button type="button" class="btn primary block" id="addBtn">＋ 新增習慣（迎接新居民）</button>
         </div>
+        <div class="panel" id="dayPanel"></div>
         <div class="panel" id="taskPanel"></div>
         <div class="panel"><h2>小屋動態</h2><ul class="feed" id="feed"></ul></div>
       </div>
       <div class="tabbody" id="tab-res" role="tabpanel" aria-labelledby="t-res" hidden><div class="panel" id="resPanel"></div></div>
       <div class="tabbody" id="tab-life" role="tabpanel" aria-labelledby="t-life" hidden>
         <div class="panel"><h2>小屋生活</h2>
-          <div class="fgroup"><h3>📋 習慣紀錄</h3><div class="fbtns"><button type="button" class="btn" data-feat="stats">📈 統計</button><button type="button" class="btn" data-feat="report">📊 本週報告</button></div></div>
+          <div class="fgroup"><h3>📋 習慣紀錄</h3><div class="fbtns"><button type="button" class="btn" data-feat="stats">📈 統計</button><button type="button" class="btn" data-feat="report">📊 本週報告</button><button type="button" class="btn" data-feat="review">🗓 月／年回顧</button><button type="button" class="btn" data-feat="mood">😊 心情日曆</button><button type="button" class="btn" data-feat="focus">🍅 專注計時</button></div></div>
           <div class="fgroup"><h3>💞 居民與回憶</h3><div class="fbtns"><button type="button" class="btn" data-feat="album">📷 相簿</button><button type="button" class="btn" data-feat="postcards">📮 明信片</button><button type="button" class="btn" data-feat="ach">🏆 成就</button></div></div>
           <div class="fgroup"><h3>🏠 小屋</h3><div class="fbtns"><button type="button" class="btn" data-feat="rating">🏅 小屋評分</button><button type="button" class="btn" data-feat="closet">👕 服裝店</button><button type="button" class="btn" data-feat="garden">🌱 庭院</button><button type="button" class="btn" data-feat="pets">🐾 寵物</button></div></div>
           <div class="fgroup"><h3>🗺 小鎮</h3><div class="fbtns"><button type="button" class="btn" data-feat="town">🗺 小鎮地圖</button></div></div>
@@ -2665,7 +2676,133 @@ function openFeat(kind){FEAT.cur=kind;const body=$('#featBody');body.innerHTML='
       const fb=el('button','btn sm','餵牠吃飯');fb.type='button';fb.onclick=()=>{p.hunger=100;taskHit('pet');const pt=PETS.find(x=>x.id===p.id);if(pt){pt.bub='heart';pt.bubT=2.5;}toast(p.name+' 吃得好開心');saveSoon();openFeat('pets');};
       card.append(cv,el('b',null,K.name),inp,el('span',null,'飽足 '+Math.round(p.hunger||0)+'%'),fb);body.append(card);}
     const row=el('div','lopts');for(const k in PET_KINDS){const K=PET_KINDS[k];const b=el('button','btn','領養'+K.name+'（'+K.price+' 金幣）');b.type='button';if(state.coins<K.price||petsArr().length>=3)b.disabled=true;b.onclick=()=>{adoptPet(k);openFeat('pets');};row.append(b);}body.append(row);}
+  else if(FEATX[kind])FEATX[kind](body,T_);
   if($('#mFeat').hidden)openModal('#mFeat');}
+
+/* =========================================================
+   Real life: focus timer, mood calendar, monthly / yearly review
+   ========================================================= */
+const MOODS=[['😄','超開心'],['🙂','不錯'],['😐','普通'],['😢','難過'],['😫','好累']];
+const FOCUS_MIN=[5,15,25,45,60];
+function b3State(){if(!state.moods||typeof state.moods!=='object'||Array.isArray(state.moods))state.moods={};if(!Array.isArray(state.focusLog))state.focusLog=[];
+  if(state.focus&&!(state.focus.end>0&&habitById(state.focus.h)))state.focus=null;}
+function ymOf(d){return d.slice(0,7);}
+function monthAdd(ym,n){let[y,m]=ym.split('-').map(Number);m+=n;while(m<1){m+=12;y--;}while(m>12){m-=12;y++;}return y+'-'+String(m).padStart(2,'0');}
+function monthDays(ym){const[y,m]=ym.split('-').map(Number);const n=new Date(y,m,0).getDate();const a=[];for(let i=1;i<=n;i++)a.push(ym+'-'+String(i).padStart(2,'0'));return a;}
+function ymLabel(ym){const[y,m]=ym.split('-');return y+' 年 '+Number(m)+' 月';}
+/* completion of one day: [done, due] across habits that existed that day */
+function dayRate(d){let done=0,due=0;for(const h of state.habits){if(h.created&&d<h.created)continue;const s=schedOf(h);const c=isChecked(h,d);
+  if(s.type==='weekly'){if(c){done++;due++;}continue;}if(!dueOn(h,d)||restOn(h,d)){if(c){done++;due++;}continue;}due++;if(c)done++;}return[done,due];}
+function rangeStats(days){const t=today();days=days.filter(d=>d<=t);const per=[];let tot=0,due=0;
+  for(const h of state.habits){let n=0,dd=0,run=0,best=0;const s=schedOf(h);
+    for(const d of days){if(h.created&&d<h.created)continue;const c=isChecked(h,d);const isDue=s.type==='weekly'?c:(dueOn(h,d)&&!restOn(h,d))||c;
+      if(c){n++;run++;best=Math.max(best,run);}else if(isDue)run=0;if(isDue)dd++;}
+    if(s.type==='weekly'){const live=days.filter(d=>!h.created||d>=h.created).length;dd=Math.max(n,Math.round(live/7*(s.times||3)));}
+    per.push({h,n,due:dd,rate:dd?Math.round(n/dd*100):0,best});tot+=n;due+=dd;}
+  const moods=[0,0,0,0,0];for(const d of days){const m=state.moods[d];if(m)moods[m.m]++;}
+  const fl=state.focusLog.filter(f=>days.includes(f.d));
+  return{days,per,tot,due,rate:due?Math.round(tot/due*100):0,moods,focusMin:fl.reduce((a,f)=>a+f.m,0),focusN:fl.length};}
+
+/* ---------- mood ---------- */
+function setMood(d,m){b3State();const prev=state.moods[d];state.moods[d]={m,n:prev&&prev.n||''};saveSoon();renderDayPanel();
+  if(d!==today()||(prev&&prev.m===m))return;const home=RES.filter(r=>r.state!=='away'&&!(r.state==='act'&&r.step&&r.step.sleep));if(!home.length)return;
+  const r=home.map(r=>[r,habitById(r.id).fav+Math.random()*30]).sort((a,b)=>b[1]-a[1])[0][0];const h=habitById(r.id);
+  const L=m<=1?['看你心情這麼好，我也跟著開心起來了！','今天是好日子耶～要不要一起慶祝一下？','嘿嘿，你笑起來真好看。']:m===2?['普通的一天也很好呀，慢慢來就好。','平平淡淡也是一種幸福喔。']:
+    m===3?['怎麼了？有什麼事都可以跟我說喔。','難過的時候不用勉強自己，我陪你。','抱一個！明天會更好的。']:['辛苦了…今天早點休息吧。','累了就先放下，習慣明天再補也沒關係。','我幫你泡杯熱茶好不好？'];
+  say(r,tone(h,choice(L)),m<=1?'happy':m>=3?'sad':null);if(m>=3)r.needs.social=clamp((r.needs.social||50)+10,0,100);}
+function renderDayPanel(){const p=$('#dayPanel');if(!p)return;b3State();p.innerHTML='';const t=today();const cur=state.moods[t];
+  p.append(el('h2',null,'今天的你'));const row=el('div','moods');
+  MOODS.forEach(([e,n],i)=>{const b=el('button','mood'+(cur&&cur.m===i?' on':''),e);b.type='button';b.title=n;b.setAttribute('aria-label','心情：'+n);b.onclick=()=>setMood(t,i);row.append(b);});p.append(row);
+  if(cur){const inp=document.createElement('input');inp.className='t moodnote';inp.maxLength=60;inp.placeholder='寫一句話記錄今天（選填）';inp.value=cur.n||'';inp.setAttribute('aria-label','今天的心情筆記');inp.onchange=()=>{cur.n=inp.value.trim();saveSoon();};p.append(inp);}
+  const bt=el('div','fbtns');const mk=(t2,k)=>{const b=el('button','btn',t2);b.type='button';b.onclick=()=>openFeat(k);bt.append(b);};
+  mk(state.focus?'🍅 專注中…':'🍅 專注計時','focus');mk('😊 心情日曆','mood');mk('🗓 回顧','review');p.append(bt);}
+function featMood(body,T_){b3State();FEAT.mOff=FEAT.mOff||0;const ym=monthAdd(ymOf(today()),FEAT.mOff);T_.textContent='心情日曆・'+ymLabel(ym);
+  const nav=el('div','lopts');const pb=el('button','btn sm','◀ 上個月');pb.type='button';pb.onclick=()=>{FEAT.mOff--;openFeat('mood');};const nb=el('button','btn sm','下個月 ▶');nb.type='button';nb.disabled=FEAT.mOff>=0;nb.onclick=()=>{FEAT.mOff++;openFeat('mood');};nav.append(pb,nb);body.append(nav);
+  const days=monthDays(ym);const g=el('div','mcal');for(const w of'一二三四五六日')g.append(el('i','h',w));const lead=(new Date(days[0]+'T00:00').getDay()+6)%7;for(let i=0;i<lead;i++)g.append(el('span','x'));
+  const t=today();for(const d of days){const m=state.moods[d];const[dn,du]=dayRate(d);const c=el('button','mc'+(d===t?' today':'')+(d>t?' fut':'')+(FEAT.mSel===d?' sel':''));c.type='button';c.disabled=d>t;
+    c.append(el('small',null,String(Number(d.slice(8)))),el('b',null,m?MOODS[m.m][0]:''));if(du&&d<=t){const bar=el('u');bar.style.width=Math.round(dn/du*100)+'%';c.append(bar);}
+    c.title=d+(m?'・'+MOODS[m.m][1]+(m.n?'：'+m.n:''):'')+(du?'・完成 '+dn+'/'+du:'');c.onclick=()=>{FEAT.mSel=d;openFeat('mood');};g.append(c);}
+  body.append(g);
+  if(FEAT.mSel&&FEAT.mSel.startsWith(ym)){const d=FEAT.mSel;const m=state.moods[d];const box=el('div','plot');box.append(el('b',null,d.slice(5).replace('-','/')+' 的心情'+(m&&m.n?'：「'+m.n+'」':'')));const row=el('div','moods');
+    MOODS.forEach(([e,n],i)=>{const b=el('button','mood'+(m&&m.m===i?' on':''),e);b.type='button';b.title=n;b.onclick=()=>{state.moods[d]={m:i,n:m&&m.n||''};saveSoon();renderDayPanel();openFeat('mood');};row.append(b);});box.append(row);body.append(box);}
+  const S=rangeStats(days);const n=S.moods.reduce((a,b)=>a+b,0);
+  if(!n){body.append(el('p','empty','還沒有心情紀錄。在「習慣」頁上方點選今天的心情，就會出現在這裡。'));return;}
+  const st=el('div','stat');st.append(el('b',null,'這個月的心情（'+n+' 天）'));const bars=el('div','mbars');S.moods.forEach((v,i)=>{const r=el('div','mb');r.append(el('span',null,MOODS[i][0]));const bar=el('div','bar');const ii=el('i');ii.style.width=(v/n*100)+'%';bar.append(ii);r.append(bar,el('em',null,v+' 天'));bars.append(r);});st.append(bars);body.append(st);
+  const grp=[[0,1],[3,4]].map(ms=>{let a=0,c=0;for(const d of days){const m=state.moods[d];if(!m||!ms.includes(m.m))continue;const[dn,du]=dayRate(d);if(du){a+=dn/du;c++;}}return c?Math.round(a/c*100):null;});
+  if(grp[0]!=null&&grp[1]!=null)body.append(el('p','hint','心情好的日子平均完成 '+grp[0]+'% 的習慣，心情低落的日子是 '+grp[1]+'%。'+(grp[0]>grp[1]+10?'照顧好心情，習慣也會跟著順利喔！':grp[1]>=grp[0]?'就算心情不好也有在努力，真的很了不起。':'')));}
+
+/* ---------- focus timer ---------- */
+const FOCUS_LINES=['加油！我在旁邊陪你喔。','專心～專心～','我也在努力，我們一起！','再撐一下下就好了！','你好認真，好帥氣！','我幫你顧著，別分心喔～','呼…休息前再衝一下！'];
+let focusIv=null,focusTalk=0;
+function focusRes(){return state.focus?RES.find(r=>r.id===state.focus.h):null;}
+function startFocus(hid,min){b3State();state.focus={h:hid,min,end:Date.now()+min*60000,start:Date.now()};saveSoon();focusTalk=Date.now()+20000;
+  const h=habitById(hid);const r=focusRes();if(r){say(r,tone(h,'好！接下來 '+min+' 分鐘我陪你一起專心！'),'happy');}log('🍅 開始專注 '+min+' 分鐘（'+h.res.name+' 陪伴中）');
+  closeModal('#mFeat');focusUI();renderDayPanel();}
+function stopFocus(done){const F=state.focus;if(!F)return;state.focus=null;const h=habitById(F.h);const r=focusRes()||RES.find(x=>x.id===F.h);
+  if(done){const min=F.min;state.focusLog.push({d:today(),m:min,h:F.h});if(state.focusLog.length>800)state.focusLog.splice(0,state.focusLog.length-800);
+    const bonus=Math.max(2,Math.round(min/5));state.coins+=bonus;if(h){h.fav=clamp(h.fav+2,0,100);if(!isChecked(h,today())&&dueToday(h))toggleCheck(h);}
+    if(r&&h){r.celebrate=3;showBub(r,'star',3);say(r,tone(h,'完成了！'+min+' 分鐘的專注，你超棒的！'),'happy');}
+    toast('🍅 專注 '+min+' 分鐘完成！+'+bonus+' 金幣'+(h&&isChecked(h,today())?'・「'+h.name+'」已打卡':''),true);log('🍅 完成 '+min+' 分鐘專注'+(h?'（'+h.res.name+' 一直陪著你）':''));taskHit&&taskHit('focus');}
+  else{toast('已結束專注計時');if(r&&h)say(r,tone(h,'沒關係，下次再一起努力！'),null);}
+  saveSoon();focusUI();renderDayPanel();renderTop();}
+function focusTick(){const F=state.focus;if(!F){focusUI();return;}const left=F.end-Date.now();if(left<=0){stopFocus(true);return;}
+  const w=$('#focusW');if(!w||w.hidden)focusUI();const tm=$('#focusTm');if(tm){const s=Math.ceil(left/1000);tm.textContent=String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');}
+  const pr=$('#focusPr');if(pr)pr.style.width=(100-left/(F.min*60000)*100)+'%';
+  if(Date.now()>focusTalk){focusTalk=Date.now()+60000+Math.random()*60000;const r=focusRes();const h=habitById(F.h);if(r&&h&&!document.hidden){r.say={text:tone(h,choice(FOCUS_LINES)),until:performance.now()/1000+5};showBub(r,'heart',2);const q=$('#focusSay');if(q)q.textContent=r.say.text;}}}
+function focusUI(){let w=$('#focusW');const F=state.focus;if(!F){if(w)w.hidden=true;return;}const h=habitById(F.h);if(!h){state.focus=null;if(w)w.hidden=true;return;}
+  if(!w){w=el('div','focusw');w.id='focusW';document.body.append(w);}
+  if(w.dataset.k!==F.h+'|'+F.start){w.dataset.k=F.h+'|'+F.start;w.innerHTML='';const av=el('div','fav');renderPortrait(av,h,'happy');
+    const info=el('div','fi');info.append(el('b',null,'🍅 專注中・'+h.name),el('span','ftm','--:--'),el('em',null,h.res.name+' 陪你一起'));info.querySelector('.ftm').id='focusTm';
+    const q=el('small','fsay','「'+tone(h,'一起加油吧！')+'」');q.id='focusSay';const bar=el('div','prog');const i=el('i');i.id='focusPr';bar.append(i);
+    const x=el('button','btn sm','結束');x.type='button';x.onclick=()=>confirmDo('現在結束的話不會自動打卡，確定要結束嗎？',()=>stopFocus(false));
+    const loc=el('button','btn sm','看看他');loc.type='button';loc.onclick=()=>select(F.h,true);
+    w.append(av,info,q,bar,el('div','lopts',''));w.lastChild.append(loc,x);}
+  w.hidden=false;}
+function featFocus(body,T_){b3State();T_.textContent='🍅 專注計時';
+  if(state.focus){const h=habitById(state.focus.h);body.append(el('p',null,'正在和 '+h.res.name+' 一起專注「'+h.name+'」，剩下 '+Math.ceil((state.focus.end-Date.now())/60000)+' 分鐘。'));
+    const b=el('button','btn','結束專注');b.type='button';b.onclick=()=>{closeModal('#mFeat');stopFocus(false);};body.append(b);return;}
+  body.append(el('p','hint','選一位居民陪你專心做一件事。時間到會自動幫那個習慣打卡，還會拿到金幣。計時用的是真實時間，關掉頁面再打開也會繼續算。'));
+  FEAT.fH=habitById(FEAT.fH)?FEAT.fH:(state.habits.find(h=>!isChecked(h,today())&&dueToday(h))||state.habits[0]||{}).id;FEAT.fM=FEAT.fM||25;
+  if(!state.habits.length){body.append(el('p','empty','先新增一個習慣吧！'));return;}
+  const g=el('div','fpick');for(const h of state.habits){const b=el('button','fp'+(FEAT.fH===h.id?' on':''));b.type='button';const av=el('div','fav');renderPortrait(av,h,'neutral');
+    b.append(av,el('b',null,h.res.name),el('span',null,h.name+(isChecked(h,today())?' ✓':'')));b.onclick=()=>{FEAT.fH=h.id;openFeat('focus');};g.append(b);}body.append(g);
+  const mr=el('div','lopts');for(const m of FOCUS_MIN){const b=el('button','btn sm'+(FEAT.fM===m?' primary':''),m+' 分鐘');b.type='button';b.onclick=()=>{FEAT.fM=m;openFeat('focus');};mr.append(b);}body.append(mr);
+  const go=el('button','btn primary block','開始專注');go.type='button';go.onclick=()=>startFocus(FEAT.fH,FEAT.fM);body.append(go);
+  const td=state.focusLog.filter(f=>f.d===today());const wk=state.focusLog.filter(f=>f.d>=addDays(today(),-6));
+  body.append(el('p','hint','今天專注 '+td.reduce((a,f)=>a+f.m,0)+' 分鐘（'+td.length+' 次）・近 7 天 '+wk.reduce((a,f)=>a+f.m,0)+' 分鐘・累計 '+state.focusLog.reduce((a,f)=>a+f.m,0)+' 分鐘'));}
+
+/* ---------- monthly / yearly review ---------- */
+function featReview(body,T_){b3State();FEAT.rv=FEAT.rv||{mode:'month',off:-0};const R=FEAT.rv;const t=today();
+  const tabs=el('div','lopts');for(const[k,n]of[['month','月回顧'],['year','年回顧']]){const b=el('button','btn sm'+(R.mode===k?' primary':''),n);b.type='button';b.onclick=()=>{R.mode=k;R.off=0;openFeat('review');};tabs.append(b);}
+  const pb=el('button','btn sm','◀');pb.type='button';pb.setAttribute('aria-label','上一個');pb.onclick=()=>{R.off--;openFeat('review');};const nb=el('button','btn sm','▶');nb.type='button';nb.setAttribute('aria-label','下一個');nb.disabled=R.off>=0;nb.onclick=()=>{R.off++;openFeat('review');};tabs.append(pb,nb);body.append(tabs);
+  let days,label,prevDays,unit;
+  if(R.mode==='month'){const ym=monthAdd(ymOf(t),R.off);days=monthDays(ym);prevDays=monthDays(monthAdd(ym,-1));label=ymLabel(ym);unit='月';}
+  else{const y=Number(t.slice(0,4))+R.off;days=[];prevDays=[];for(let m=1;m<=12;m++){const ym=y+'-'+String(m).padStart(2,'0');days.push(...monthDays(ym));prevDays.push(...monthDays((y-1)+'-'+String(m).padStart(2,'0')));}label=y+' 年';unit='年';}
+  T_.textContent=label+' 回顧';const S=rangeStats(days),P=rangeStats(prevDays);
+  if(!S.tot&&!S.moods.some(Boolean)&&!S.focusN){body.append(el('p','empty','這段時間還沒有紀錄。'));return;}
+  const kp=el('div','kpis');const kpi=(v,n)=>{const d=el('div','kpi');d.append(el('b',null,v),el('span',null,n));kp.append(d);};
+  kpi(S.tot,'總打卡次數');kpi(S.rate+'%','完成率');kpi(Math.max(0,...S.per.map(p=>p.best)),'最長連續天數');kpi(S.focusMin,'專注分鐘');body.append(kp);
+  if(P.due){const d=S.rate-P.rate;body.append(el('p','hint','比上一個'+unit+(d>0?'進步了 '+d+'%！📈':d<0?'少了 '+(-d)+'%，'+'沒關係，再接再厲！':'持平，穩穩的就是最好的。')));}
+  /* trend */
+  const tr=el('div','stat');tr.append(el('b',null,R.mode==='month'?'每天完成度':'每月完成率'));const strip=el('div','trend'+(R.mode==='year'?' yr':''));
+  if(R.mode==='month'){for(const d of days){const[dn,du]=dayRate(d);const c=el('i',d>t?'fut':'');const v=du?dn/du:0;c.style.height=Math.max(4,Math.round(v*100))+'%';c.title=d.slice(5)+' '+dn+'/'+du;strip.append(c);}}
+  else{for(let m=0;m<12;m++){const md=days.filter(d=>Number(d.slice(5,7))===m+1);const s=rangeStats(md);const c=el('i',md[0]>t?'fut':'');c.style.height=Math.max(4,s.rate)+'%';c.title=(m+1)+' 月 '+s.rate+'%';c.append(el('small',null,String(m+1)));strip.append(c);}}
+  tr.append(strip);body.append(tr);
+  /* per habit */
+  const live=S.per.filter(p=>p.due);if(live.length){const hb=el('div','stat');hb.append(el('b',null,'每個習慣'));for(const p of live.slice().sort((a,b)=>b.rate-a.rate)){const r=el('div','mb');r.append(el('span',null,p.h.res.name+'・'+p.h.name));const bar=el('div','bar');const i=el('i');i.style.width=Math.min(100,p.rate)+'%';bar.append(i);r.append(bar,el('em',null,p.n+' 次・'+p.rate+'%'));hb.append(r);}body.append(hb);
+    const best=live.slice().sort((a,b)=>b.rate-a.rate||b.n-a.n)[0],low=live.slice().sort((a,b)=>a.rate-b.rate)[0];
+    const mv=el('div','plot');mv.append(el('b',null,'🏅 本'+unit+' MVP：'+best.h.res.name+'（'+best.h.name+' '+best.rate+'%）'),el('span',null,'「'+tone(best.h,'這個'+unit+'我們真的很努力！謝謝你一直陪著我。')+'」'));
+    if(low!==best&&low.rate<60)mv.append(el('span',null,'💬 '+low.h.res.name+'：「'+tone(low.h,'下個'+unit+'我想多努力一點…你會陪我吧？')+'」'));body.append(mv);}
+  /* mood + focus */
+  const mn=S.moods.reduce((a,b)=>a+b,0);if(mn){const ms=el('div','stat');ms.append(el('b',null,'心情紀錄（'+mn+' 天）'));const row=el('div','moods static');S.moods.forEach((v,i)=>{if(v)row.append(el('span','mood',MOODS[i][0]+' '+v));});ms.append(row);
+    const top=S.moods.indexOf(Math.max(...S.moods));ms.append(el('span',null,'最常出現的心情是「'+MOODS[top][1]+'」。'));body.append(ms);}
+  if(S.focusN){const fs=el('div','stat');const by={};for(const f of state.focusLog.filter(f=>S.days.includes(f.d)))by[f.h]=(by[f.h]||0)+f.m;const top=Object.entries(by).sort((a,b)=>b[1]-a[1])[0];const th=top&&habitById(top[0]);
+    fs.append(el('b',null,'🍅 專注 '+S.focusN+' 次，共 '+S.focusMin+' 分鐘'),el('span',null,th?'最常陪你的是 '+th.res.name+'（'+top[1]+' 分鐘）':''));body.append(fs);}}
+function reviewCheck(){b3State();const t=today();const ym=ymOf(t);if(!state.revSeen){state.revSeen=ym;return;}if(state.revSeen===ym)return;
+  const prev=state.revSeen;state.revSeen=ym;const yearTurn=prev.slice(0,4)!==ym.slice(0,4);const S=rangeStats(monthDays(prev));saveSoon();if(!S.tot)return;
+  FEAT.rv={mode:yearTurn?'year':'month',off:yearTurn?-1:-1};const msg=yearTurn?'🗓 '+prev.slice(0,4)+' 年的年度回顧出爐了！點我看看這一年':'🗓 '+ymLabel(prev)+'的回顧出爐了：完成率 '+S.rate+'%，點我看看';log(msg);setTimeout(()=>toast(msg,true),2500);}
+const FEATX={focus:featFocus,mood:featMood,review:featReview};
+function b3Init(){b3State();renderDayPanel();focusUI();if(focusIv)clearInterval(focusIv);focusIv=setInterval(()=>guard('focus',focusTick),1000);reviewCheck();setInterval(()=>guard('review',reviewCheck),60000);}
 
 /* ---------- reminder notifications (while the page is open) ---------- */
 function notifyCheck(){try{if(!SET.notify||!('Notification' in window)||Notification.permission!=='granted')return;const t=today();if(SET.lastNotify===t)return;
@@ -4072,7 +4209,7 @@ $('#habitForm').onsubmit=e=>{e.preventDefault();const name=$('#hName').value.tri
   closeModal('#mHabit');saveSoon();};
 
 /* ---------- click-through for feed and toasts ---------- */
-function feedTarget(t){if(/📮/.test(t))return{feat:'postcards'};if(/🎪/.test(t))return{feat:'town'};if(/📬|✉|💌/.test(t))return{inbox:1};if(/🎉|派對|聚會/.test(t))return{tab:'life'};if(/🌱|🥀|庭院/.test(t))return{feat:'garden'};
+function feedTarget(t){if(/🍅|專注/.test(t))return{feat:'focus'};if(/回顧/.test(t))return{feat:'review'};if(/📮/.test(t))return{feat:'postcards'};if(/🎪/.test(t))return{feat:'town'};if(/📬|✉|💌/.test(t))return{inbox:1};if(/🎉|派對|聚會/.test(t))return{tab:'life'};if(/🌱|🥀|庭院/.test(t))return{feat:'garden'};
   if(/🐾|寵物/.test(t))return{feat:'pets'};if(/🏆|成就/.test(t))return{feat:'ach'};if(/🏗|擴建/.test(t))return{feat:'rating'};if(/🎯|挑戰/.test(t))return{res:1};
   if(typeof RES!=='undefined'){const r=RES.find(x=>t.includes(x.name));if(r)return{sel:r.id};}if(state&&state.babies){const b=state.babies.find(x=>t.includes(x.name));if(b)return{sel:b.id};}return null;}
 function feedAction(t){const g=feedTarget(t);if(!g)return;if(g.feat)openFeat(g.feat);else if(g.inbox)openInbox();else if(g.tab)showTab(g.tab);else if(g.sel)select(g.sel,true);else if(g.res)showTab('res');}
@@ -4416,7 +4553,7 @@ function boot(){
   setInterval(()=>guard('notify',notifyCheck),60000);
   if(!state.tutDone)setTimeout(()=>{if(!state.tutDone&&$('#mHabit').hidden)tutStart();},1800);
   if(!window.claude&&SET.catchup&&state.savedAt){const away=(Date.now()-state.savedAt)/1000;if(away>90&&away<86400*90)queueCatch(away);}
-  initIdleUI();
+  initIdleUI();guard('b3',b3Init);
   lastWall=Date.now();requestAnimationFrame(frame);
   initStore();initAI();
   setInterval(()=>{if(document.hidden)guard('bg',advance);},1000);
