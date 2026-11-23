@@ -315,6 +315,15 @@ button.chip.mail{background:#e9f3ff;color:var(--ink);position:relative}
 .wkr i.on{background:var(--green)}.wkr i.fut{background:#eee;border-style:dashed}.wkr i.h{border:0;background:none}
 .dreamcard{font-size:12px;border:2px solid var(--ink);padding:6px 8px;margin:8px 0;background:#f4f0ff}
 .dreamcard .bar{margin:4px 0}
+.qty{display:flex;align-items:center;gap:6px;margin-top:4px}.qty .bar{flex:1;min-width:60px;margin:0}.qty small{font-size:11px;white-space:nowrap}
+.hx{margin-top:3px;display:flex;flex-wrap:wrap;gap:8px}.link{background:none;border:0;padding:0;color:var(--blue);text-decoration:underline;cursor:pointer;font-size:12px;font-family:inherit}
+.notebar{display:flex;flex-wrap:wrap;align-items:center;gap:4px;margin-top:6px;padding:4px;border:2px dashed var(--ink);background:#fffaf0}.notebar small{font-size:11px;width:100%}
+.notebar .mood{font-size:18px;background:none;border:0;cursor:pointer;padding:0 2px}.notebar input{flex:1;min-width:90px;padding:3px 6px;font-size:12px}
+.goalrow input{min-width:0}
+.tasks{list-style:none;margin:0;padding:0;display:grid;gap:4px}.tasks li{display:grid;grid-template-columns:1fr auto auto;gap:6px;font-size:13px;align-items:center}.tasks li.done span{color:var(--muted);text-decoration:line-through}.tasks li b{color:var(--gold-d)}
+.heat{display:flex;gap:3px;margin:6px 0 12px;overflow-x:auto}.hcol{display:grid;gap:3px}.heat i{width:14px;height:14px;display:block;background:#e8e8ee;border:1px solid #c9ccd6}.heat i.fut{background:none;border-style:dashed}
+.stat{border:2px solid var(--ink);padding:8px;margin-bottom:8px;background:#fff;font-size:13px;display:grid;gap:4px}.stat span{font-size:12px;color:var(--muted)}
+.wkbars{display:flex;gap:6px;align-items:flex-end;height:60px}.wb{flex:1;height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:2px}.wb i{width:100%;background:var(--green);display:block;min-height:2px}.wb small{font-size:10px}
 </style>
 </head>
 <body>
@@ -366,8 +375,9 @@ button.chip.mail{background:#e9f3ff;color:var(--ink);position:relative}
           <ul class="habits" id="habitList"></ul>
           <button type="button" class="btn primary block" id="addBtn">＋ 新增習慣（迎接新居民）</button>
         </div>
+        <div class="panel" id="taskPanel"></div>
         <div class="panel"><h2>小屋功能</h2><div class="fbtns">
-          <button type="button" class="btn" data-feat="album">📷 相簿</button><button type="button" class="btn" data-feat="ach">🏆 成就</button><button type="button" class="btn" data-feat="report">📊 本週報告</button><button type="button" class="btn" data-feat="garden">🌱 庭院</button><button type="button" class="btn" data-feat="pets">🐾 寵物</button></div></div>
+          <button type="button" class="btn" data-feat="album">📷 相簿</button><button type="button" class="btn" data-feat="ach">🏆 成就</button><button type="button" class="btn" data-feat="report">📊 本週報告</button><button type="button" class="btn" data-feat="stats">📈 統計</button><button type="button" class="btn" data-feat="garden">🌱 庭院</button><button type="button" class="btn" data-feat="pets">🐾 寵物</button></div></div>
         <div class="panel" id="partyPanel"></div>
         <div class="panel"><h2>小屋動態</h2><ul class="feed" id="feed"></ul></div>
         <div class="panel" id="idlePanel">
@@ -399,6 +409,10 @@ button.chip.mail{background:#e9f3ff;color:var(--ink);position:relative}
     <label class="f" for="hName">想養成的習慣</label>
     <input class="t" id="hName" maxlength="20" placeholder="例如：喝水" autocomplete="off" required>
     <div class="sugs" id="sugs"></div>
+    <label class="f">多久做一次</label>
+    <div class="opt" id="freqOpts"></div>
+    <label class="f">每天的目標數量（可不填，例如喝水 2000 ml、跑步 3 公里）</label>
+    <div class="inrow goalrow"><input class="t" id="gTarget" type="number" min="0" step="any" placeholder="目標" aria-label="目標數量"><input class="t" id="gUnit" maxlength="6" placeholder="單位" aria-label="單位"><input class="t" id="gStep" type="number" min="0" step="any" placeholder="每次加多少" aria-label="每次增加多少"></div>
     <label class="f" for="rName">居民名字</label>
     <div class="inrow"><input class="t" id="rName" maxlength="8" placeholder="幫他取個名字，或按隨機取名" autocomplete="off"><button type="button" class="btn" id="randName">隨機取名</button></div>
     <label class="f" for="hJob">職業（決定上班的日子、時數和薪水）</label>
@@ -936,7 +950,8 @@ function normalize(s){
     if(typeof h.fav!=='number')h.fav=30;
     h.chat=(Array.isArray(h.chat)?h.chat:[]).filter(m=>m&&typeof m.text==='string');if(!Array.isArray(h.secrets))h.secrets=[];if(!Array.isArray(h.checks))h.checks=[];
     if(!h.res.look.eye)h.res.look.eye=EYES[0];
-    if(!JOBS[h.job])h.job=defaultJob(h.name,h.id);if(typeof h.money!=='number')h.money=Math.round(40+hashStr(h.id)%80);
+    if(!JOBS[h.job])h.job=defaultJob(h.name,h.id);
+    if(h.sched&&!['daily','days','weekly'].includes(h.sched.type))h.sched=null;if(h.goal&&!(h.goal.target>0))h.goal=null;if(!Array.isArray(h.rests))h.rests=[];if(typeof h.money!=='number')h.money=Math.round(40+hashStr(h.id)%80);
     if(Array.isArray(h.room.items)){const list=['bed','wardrobe'];for(const k of h.room.items)if(LEGACY[k])list.push(LEGACY[k]);for(const k of(h.room.stored||[]))if(LEGACY[k])s.inv[LEGACY[k]]=(s.inv[LEGACY[k]]||0)+1;
       s.pendingDefaults[h.id]=list;delete h.room.items;delete h.room.stored;}
     if(typeof h.slot!=='number'||used.has(h.slot)||h.slot>=MAXH){let k=0;while(used.has(k))k++;h.slot=k;}
@@ -982,9 +997,7 @@ const AI={fn:null,on:false,denied:false};
 async function initAI(){try{if(!window.claude||typeof window.claude.use!=='function')return;const s=await window.claude.use('sample');if(s){AI.fn=s;AI.on=true;if(curTab==='res')renderRes();}}catch(e){}}
 
 function isChecked(h,d){return h.checks.includes(d);}
-function streak(h){const t=today();let d=isChecked(h,t)?t:addDays(t,-1);let n=0;while(isChecked(h,d)){n++;d=addDays(d,-1);}return n;}
 function lastCheck(h){return h.checks.length?h.checks[h.checks.length-1]:null;}
-function isActive(h){const y=addDays(today(),-1);const lc=lastCheck(h);return(lc&&lc>=y)||h.created>=y;}
 function habitById(id){return state.habits.find(h=>h.id===id);}
 function nameOf(id){const h=habitById(id);if(h)return h.res.name;const b=state.babies.find(x=>x.id===id);return b?b.name:'已搬走的居民';}
 function floorOfSlot(s){return Math.floor(s/PER_FLOOR);}
@@ -2112,7 +2125,7 @@ function answerLetter(id,i,auto){const L=inboxArr().find(x=>x.id===id);if(!L||L.
   const cost=L.costs&&L.costs[i]||0;if(!auto&&cost&&state.coins<cost){toast('金幣不夠（需要 '+cost+'）');return;}
   if(auto&&cost&&state.coins<cost)i=L.def;else if(cost&&(!auto||i===L.def)){state.coins-=cost;renderTop();}
   let res='';try{res=habitById(L.from)?(LETTERS[L.kind].run(L,i)||''):'';}catch(e){res='';showCrash('letter',e);}
-  L.done=true;L.pick=i;L.auto=!!auto;L.result=res;L.doneAt=gameMin;if(!auto){statAdd('letters');checkAch();}
+  L.done=true;L.pick=i;L.auto=!!auto;L.result=res;L.doneAt=gameMin;if(!auto){statAdd('letters');checkAch();taskHit('letter');}
   if(res){log('✉ '+res);if(!auto)toast(res,true);}
   saveSoon();renderInboxBadge();if(!$('#mInbox').hidden)renderInbox();if(curTab==='res')renderRes();renderParty();renderTop();}
 function expireLetters(){for(const L of inboxArr().slice())if(!L.done&&(!habitById(L.from)||gameMin-L.at>4320))answerLetter(L.id,L.def,true);}
@@ -2556,6 +2569,7 @@ function openFeat(kind){FEAT.cur=kind;const body=$('#featBody');body.innerHTML='
   else if(kind==='ach'){T_.textContent='成就與稱號';const n=ACH.filter(a=>state.ach&&state.ach[a[0]]).length;body.append(el('p','hint','已解鎖 '+n+' / '+ACH.length+'。解鎖的成就可以設為你的稱號，顯示在小屋名字下方。'));
     const ul=el('ul','achs');for(const[id,name,desc,title,,coins]of ACH){const got=state.ach&&state.ach[id];const li=el('li',got?'got':'');li.append(el('b',null,(got?'🏆 ':'🔒 ')+name),el('span',null,desc+'（稱號「'+title+'」・'+coins+' 金幣）'));
       if(got){const b=el('button','btn sm'+(state.title===id?' primary':''),state.title===id?'使用中':'設為稱號');b.type='button';b.onclick=()=>{state.title=state.title===id?null:id;renderTitle();saveSoon();openFeat('ach');};li.append(b);}ul.append(li);}body.append(ul);}
+  else if(kind==='stats'){T_.textContent='習慣統計';renderStats(body);}
   else if(kind==='report'){T_.textContent='本週習慣報告';const wk=mondayOf(today());const W=weekStats(wk);const pct=W.pos?Math.round(W.tot/W.pos*100):0;
     body.append(el('p',null,wk.slice(5).replace('-','/')+' 起的這一週：一共打卡 '+W.tot+' 次，完成率 '+pct+'%'));
     const tb=el('div','wk');const hd=el('div','wkr');hd.append(el('span',null,''));for(const d of W.days)hd.append(el('i','h','一二三四五六日'[W.days.indexOf(d)]));hd.append(el('b',null,''));tb.append(hd);
@@ -2564,15 +2578,15 @@ function openFeat(kind){FEAT.cur=kind;const body=$('#featBody');body.innerHTML='
   else if(kind==='garden'){T_.textContent='庭院菜園';body.append(el('p','hint','庭院就在一樓右邊的大門外。種下種子後，居民會自己去澆水、收成（下雨天會自動澆水）。連續 3 天沒澆水會枯掉。收成的作物會換成金幣。'));
     const grid=el('div','plots');gardenArr().forEach((p,i)=>{const s=plotState(p);const card=el('div','plot');card.append(el('b',null,'菜圃 '+(i+1)));
       if(s==='empty'){card.append(el('span',null,'空地，選一種種子：'));const row=el('div','lopts');for(const k in CROPS){const C=CROPS[k];const b=el('button','btn sm',C.name+'（'+C.seed+' 金幣・'+C.days+' 天）');b.type='button';if(state.coins<C.seed)b.disabled=true;
-          b.onclick=()=>{if(state.coins<C.seed)return;state.coins-=C.seed;renderTop();plant(i,k,null);openFeat('garden');};row.append(b);}card.append(row);}
+          b.onclick=()=>{if(state.coins<C.seed)return;state.coins-=C.seed;renderTop();plant(i,k,null);taskHit('garden');openFeat('garden');};row.append(b);}card.append(row);}
       else{const C=CROPS[p.crop];card.append(el('span',null,C.name+'・'+(s==='ripe'?'可以收成了！':s==='dead'?'枯掉了':'成長中 '+Math.floor(p.grow||0)+'/'+C.days+' 天'+(p.lastWater>=houseDay()?'・今天澆過水':'・今天還沒澆水'))));
         const row=el('div','lopts');const mk=(t,f)=>{const b=el('button','btn sm',t);b.type='button';b.onclick=()=>{f();openFeat('garden');};row.append(b);};
-        if(s==='ripe')mk('自己收成',()=>harvest(i,null));if(s==='grow'&&p.lastWater<houseDay())mk('幫忙澆水',()=>{p.lastWater=houseDay();toast('澆好水了');saveSoon();});if(s==='dead')mk('清掉',()=>{gardenArr()[i]=null;saveSoon();});card.append(row);}
+        if(s==='ripe')mk('自己收成',()=>{harvest(i,null);taskHit('garden');});if(s==='grow'&&p.lastWater<houseDay())mk('幫忙澆水',()=>{p.lastWater=houseDay();taskHit('garden');toast('澆好水了');saveSoon();});if(s==='dead')mk('清掉',()=>{gardenArr()[i]=null;saveSoon();});card.append(row);}
       grid.append(card);});body.append(grid);}
   else if(kind==='pets'){T_.textContent='寵物';body.append(el('p','hint','寵物會在一樓走來走去，居民會餵牠、陪牠玩，小狗還會被帶出門散步。最多養三隻。'));
     for(const p of petsArr()){const K=PET_KINDS[p.kind];const card=el('div','plot');const cv=document.createElement('canvas');cv.width=18;cv.height=16;cv.getContext('2d').drawImage(petSprite(p.kind,p.col,0),0,0);cv.className='petcv';
       const inp=document.createElement('input');inp.className='t';inp.value=p.name;inp.maxLength=8;inp.setAttribute('aria-label','寵物名字');inp.onchange=()=>{const v=inp.value.trim();if(v){p.name=v;saveSoon();}};
-      const fb=el('button','btn sm','餵牠吃飯');fb.type='button';fb.onclick=()=>{p.hunger=100;const pt=PETS.find(x=>x.id===p.id);if(pt){pt.bub='heart';pt.bubT=2.5;}toast(p.name+' 吃得好開心');saveSoon();openFeat('pets');};
+      const fb=el('button','btn sm','餵牠吃飯');fb.type='button';fb.onclick=()=>{p.hunger=100;taskHit('pet');const pt=PETS.find(x=>x.id===p.id);if(pt){pt.bub='heart';pt.bubT=2.5;}toast(p.name+' 吃得好開心');saveSoon();openFeat('pets');};
       card.append(cv,el('b',null,K.name),inp,el('span',null,'飽足 '+Math.round(p.hunger||0)+'%'),fb);body.append(card);}
     const row=el('div','lopts');for(const k in PET_KINDS){const K=PET_KINDS[k];const b=el('button','btn','領養'+K.name+'（'+K.price+' 金幣）');b.type='button';if(state.coins<K.price||petsArr().length>=3)b.disabled=true;b.onclick=()=>{adoptPet(k);openFeat('pets');};row.append(b);}body.append(row);}
   if($('#mFeat').hidden)openModal('#mFeat');}
@@ -2646,6 +2660,93 @@ Object.assign(LETTERS,{crib:{run(L,i){const h=habitById(L.from);if(i!==0){moodAd
 function askCrib(fromId,after){if(letterPending('crib'))return;const h=habitById(fromId);if(!h)return;
   sendLetter('crib',fromId,tone(h,after?'寶寶來了，可是家裡還沒有嬰兒床…晚上只能睡在地上，可以幫我們買一張嗎？':'我們想要寶寶了，可是家裡還沒有嬰兒床…可以幫我們準備一張嗎？'),['幫忙買嬰兒床（80 金幣）','還沒準備好'],{after:!!after},1,[80,0]);}
 
+/* =========================================================
+   Habit schedules, quantities, rest tickets, notes, challenges,
+   daily tasks and stats
+   ========================================================= */
+function wdOf(ds){const[y,m,d]=ds.split('-').map(Number);return(new Date(y,m-1,d).getDay()+6)%7;}
+function mondayOfD(ds){return addDays(ds,-wdOf(ds));}
+function schedOf(h){return h&&h.sched&&h.sched.type?h.sched:{type:'daily'};}
+function dueOn(h,d){const s=schedOf(h);return s.type==='days'?(s.days||[]).includes(wdOf(d)):true;}
+function restOn(h,d){return(h.rests||[]).includes(d);}
+function weekCount(h,mon){let c=0,r=0;for(let i=0;i<7;i++){const d=addDays(mon,i);if(isChecked(h,d))c++;else if(restOn(h,d))r++;}return[c,r];}
+const STREAK_C=new Map();
+function streak(h){const t=today();const key=h.id+'|'+t+'|'+h.checks.length+'|'+(h.checks[h.checks.length-1]||'')+'|'+(h.rests||[]).length+'|'+JSON.stringify(schedOf(h));
+  const c=STREAK_C.get(key);if(c!=null)return c;const v=streakCalc(h,t);if(STREAK_C.size>400)STREAK_C.clear();STREAK_C.set(key,v);return v;}
+function streakCalc(h,t){const s=schedOf(h);
+  if(s.type==='weekly'){let wk=mondayOfD(t);let n=weekCount(h,wk)[0];const start=mondayOfD(h.created||t);
+    for(let k=0;k<104;k++){wk=addDays(wk,-7);if(wk<start)break;const[c,r]=weekCount(h,wk);if(c+r>=(s.times||3))n+=c;else break;}return n;}
+  let d=isChecked(h,t)?t:addDays(t,-1);let n=0;
+  for(let k=0;k<2000;k++){if(isChecked(h,d))n++;else if(d<(h.created||t))break;else if(dueOn(h,d)&&!restOn(h,d))break;d=addDays(d,-1);}return n;}
+function isActive(h){const t=today();if(isChecked(h,t)||!h.created||h.created>=addDays(t,-1))return true;const s=schedOf(h);
+  if(s.type==='weekly'){for(let i=1;i<=8;i++){const d=addDays(t,-i);if(isChecked(h,d)||restOn(h,d)||d<h.created)return true;}return false;}
+  let d=addDays(t,-1);for(let k=0;k<14;k++){if(isChecked(h,d)||d<h.created)return true;if(dueOn(h,d)&&!restOn(h,d))return false;d=addDays(d,-1);}return true;}
+function dueToday(h){const s=schedOf(h);const t=today();if(s.type==='weekly'){const[c]=weekCount(h,mondayOfD(t));return c<(s.times||3)||isChecked(h,t);}return dueOn(h,t);}
+function schedText(h){const s=schedOf(h);if(s.type==='days')return '每週'+(s.days||[]).map(d=>'一二三四五六日'[d]).join('、');if(s.type==='weekly')return '每週 '+(s.times||3)+' 次';return '每天';}
+/* quantities */
+function goalOf(h){return h.goal&&h.goal.target>0?h.goal:null;}
+function qtyToday(h){return(h.qty&&h.qty[today()])||0;}
+function addQty(h,amt){const g=goalOf(h);if(!g)return;h.qty=h.qty||{};const t=today();h.qty[t]=Math.max(0,(h.qty[t]||0)+amt);
+  const keys=Object.keys(h.qty).sort();if(keys.length>90)for(const k of keys.slice(0,keys.length-90))delete h.qty[k];
+  if(h.qty[t]>=g.target&&!isChecked(h,t))toggleCheck(h);else{saveSoon();renderList();}}
+/* rest tickets: 2 per real month */
+function restInfo(){const mo=today().slice(0,7);if(!state.restT||state.restT.month!==mo)state.restT={month:mo,left:2};return state.restT;}
+function useRest(h,day){const R=restInfo();if(R.left<=0){toast('這個月的休息券用完了');return;}if(isChecked(h,day)||restOn(h,day))return;
+  R.left--;h.rests=(h.rests||[]).concat([day]).slice(-60);const r=R_(h.id);if(r)say(r,tone(h,day===today()?'好，今天就好好休息，明天再一起加油！':'謝謝你幫我補請假，差點就斷掉了…'),'happy');
+  toast('已使用休息券（本月剩 '+R.left+' 張），連續紀錄不會中斷');log(h.res.name+' 的「'+h.name+'」'+(day===today()?'今天':'昨天')+'休息一天');saveSoon();renderList();}
+function canPatchYesterday(h){const y=addDays(today(),-1);return h.created<=y&&dueOn(h,y)&&schedOf(h).type!=='weekly'&&!isChecked(h,y)&&!restOn(h,y);}
+/* check-in mood & notes */
+const NOTE_MOODS=['😄','🙂','😐','😣','😫'];const NOTE_WORD=['超開心','還不錯','普普通通','有點辛苦','好累'];
+let noteFor=null;
+function saveNote(h,mi,text){h.notes=h.notes||{};h.notes[today()]={m:mi,t:(text||'').slice(0,40)};const ks=Object.keys(h.notes).sort();if(ks.length>60)for(const k of ks.slice(0,ks.length-60))delete h.notes[k];
+  noteFor=null;taskHit('note');const r=R_(h.id);if(r){const lines=[['太好了！看到你開心我也好開心！','嘿嘿，今天是很棒的一天呢！'],['今天也辛苦了～'],['平凡的一天也很好喔。'],['辛苦了…你已經很努力了。','有點辛苦對吧？明天會更好的。'],['好好休息，你今天真的很努力了。','累的時候要記得照顧自己喔。']][mi];say(r,tone(h,choice(lines)),mi<=1?'happy':'shy');}
+  saveSoon();renderList();}
+function noteLine(h){if(!h.notes)return null;const y=addDays(today(),-1);const n=h.notes[today()]||h.notes[y];if(!n)return null;const when=h.notes[today()]?'今天':'昨天';
+  if(n.t)return '你'+when+'寫說「'+n.t+'」…'+(n.m>=3?'現在有好一點嗎？':'聽起來很不錯耶！');return n.m>=3?'你'+when+'好像很'+NOTE_WORD[n.m]+'，現在還好嗎？':'你'+when+'心情'+NOTE_WORD[n.m]+'，我也跟著開心！';}
+/* challenges */
+const CHALLENGES=[{id:'c7',name:'7 天暖身',len:7,coins:30},{id:'c21',name:'21 天養成',len:21,coins:80},{id:'c30',name:'30 天挑戰',len:30,coins:120},{id:'c66',name:'66 天自動化',len:66,coins:250},{id:'c100',name:'百日挑戰',len:100,coins:400}];
+function chalOf(h){return h.chal&&CHALLENGES.find(c=>c.id===h.chal.id)?h.chal:null;}
+function chalProg(h){const c=chalOf(h);if(!c)return 0;return h.checks.filter(d=>d>=c.start).length;}
+function chalCheck(h){const c=chalOf(h);if(!c)return;const C=CHALLENGES.find(x=>x.id===c.id);const t=today();
+  if(schedOf(h).type!=='weekly'){let d=addDays(t,-1);while(d>=c.start){if(!isChecked(h,d)&&dueOn(h,d)&&!restOn(h,d)){h.chal=null;const m='「'+h.name+'」的'+C.name+'中斷了…沒關係，隨時可以重新開始！';log('🎯 '+m);toast(m);const r=R_(h.id);if(r)say(r,tone(h,'挑戰中斷了…不過我還想再試一次！'),'sad');saveSoon();return;}d=addDays(d,-1);}}
+  if(chalProg(h)>=C.len){h.chal=null;h.chalsDone=(h.chalsDone||[]).concat([C.id]);state.coins+=C.coins;statAdd('challenges');const m='🎯 挑戰成功！'+h.res.name+' 完成了「'+h.name+'」的'+C.name+'（+'+C.coins+' 金幣）';log(m);toast(m,true);
+    addPhoto('ach',h.res.name+' 完成'+C.name,[h.id]);const r=R_(h.id);if(r){r.celebrate=4;showBub(r,'star',4);}renderTop();checkAch();saveSoon();}}
+function startChal(h,id){const C=CHALLENGES.find(x=>x.id===id);h.chal={id,start:today()};toast('開始「'+C.name+'」！'+C.len+' 天後見真章');const r=R_(h.id);if(r)say(r,tone(h,'好！'+C.name+'，我們一起完成它！'),'happy');saveSoon();if(curTab==='res')renderRes();}
+/* daily tasks (real days) */
+const TASK_POOL=[{id:'chat',t:'和居民聊天',goal:3},{id:'checkall',t:'完成今天所有該做的習慣',goal:1},{id:'gift',t:'送一份禮物',goal:1},{id:'letter',t:'回覆信箱裡的信',goal:1},
+  {id:'garden',t:'在庭院澆水、種菜或收成',goal:1},{id:'decorate',t:'擺放或旋轉 1 件家具',goal:1},{id:'note',t:'寫一則打卡心情',goal:1},{id:'visit',t:'點開 3 位不同的居民',goal:3},{id:'pet',t:'餵寵物吃飯',goal:1}];
+function dailyTasks(){const t=today();if(!state.daily||state.daily.date!==t){const pool=TASK_POOL.filter(x=>(x.id!=='pet'||petsArr().length)&&(x.id!=='letter'||true));
+    const pick=[];const p2=pool.slice().sort(()=>Math.random()-.5);for(const x of p2){if(pick.length>=3)break;pick.push({id:x.id,n:0,goal:x.goal,done:false});}
+    state.daily={date:t,list:pick,bonus:false,seen:[]};}return state.daily;}
+function taskHit(id,key){if(!state)return;const D=dailyTasks();if(id==='visit'){if(D.seen.includes(key))return;D.seen.push(key);}
+  for(const k of D.list){if(k.id!==id||k.done)continue;k.n++;if(k.n>=k.goal){k.done=true;state.coins+=15;toast('✅ 今日任務完成：'+TASK_POOL.find(x=>x.id===id).t+'（+15 金幣）');renderTop();}}
+  if(!D.bonus&&D.list.every(k=>k.done)){D.bonus=true;state.coins+=30;toast('🎉 今天的任務全部完成！額外 +30 金幣',true);renderTop();}renderTasks();saveSoon();}
+function renderTasks(){const pnl=$('#taskPanel');if(!pnl||!state)return;const D=dailyTasks();pnl.innerHTML='';pnl.append(el('h2',null,'今日任務'));
+  const ul=el('ul','tasks');for(const k of D.list){const T=TASK_POOL.find(x=>x.id===k.id);const li=el('li',k.done?'done':'');li.append(el('span',null,(k.done?'✅ ':'⬜ ')+T.t),el('small',null,k.goal>1?Math.min(k.n,k.goal)+'/'+k.goal:''),el('b',null,'+15'));ul.append(li);}
+  pnl.append(ul,el('p','hint',D.bonus?'今天的任務都完成了，明天會有新任務！':'全部完成再額外 +30 金幣。每天（真實日期）更新。'));}
+/* stats */
+function habitStats(h){const t=today();let due=0,done=0;for(let i=0;i<30;i++){const d=addDays(t,-i);if(d<h.created)break;if(schedOf(h).type==='weekly'||dueOn(h,d)){if(!restOn(h,d))due++;if(isChecked(h,d))done++;}}
+  if(schedOf(h).type==='weekly'){due=Math.min(due,Math.ceil(30/7)*(schedOf(h).times||3));}
+  const wk=[0,0,0,0,0,0,0],wkDue=[0,0,0,0,0,0,0];for(let i=0;i<84;i++){const d=addDays(t,-i);if(d<h.created)break;const w=wdOf(d);if(dueOn(h,d))wkDue[w]++;if(isChecked(h,d))wk[w]++;}
+  let best=0,cur=0;const sorted=h.checks.slice().sort();let prev=null;for(const d of sorted){cur=prev&&(addDays(prev,1)===d||(()=>{let x=addDays(prev,1);while(x<d&&(!dueOn(h,x)||restOn(h,x)))x=addDays(x,1);return x===d;})())?cur+1:1;best=Math.max(best,cur);prev=d;}
+  return{rate:due?Math.min(100,Math.round(done/due*100)):0,done,best,wk,wkDue,total:h.checks.length};}
+function renderStats(body){const t=today();const hs=state.habits.slice().sort((a,b)=>a.slot-b.slot);if(!hs.length){body.append(el('p','empty','還沒有習慣。'));return;}
+  let all=0,allDue=0;for(const h of hs){const S=habitStats(h);all+=S.done;}
+  body.append(el('p','hint','近 30 天一共打卡 '+all+' 次。格子越綠代表那天完成越多習慣；長條是星期幾的完成率。'));
+  const weeks=16;const start=addDays(mondayOfD(t),-(weeks-1)*7);const grid=el('div','heat');
+  for(let w=0;w<weeks;w++){const col=el('div','hcol');for(let i=0;i<7;i++){const d=addDays(start,w*7+i);const n=hs.filter(h=>isChecked(h,d)).length;const due=hs.filter(h=>h.created<=d&&dueOn(h,d)).length;
+      const c=el('i');if(d>t)c.className='fut';else{const v=due?n/due:0;c.style.background=v===0?'#e8e8ee':v<.34?'#b9e4c0':v<.67?'#6fc97e':v<1?'#38b764':'#1f8a44';}c.title=d+'：'+n+'/'+due;col.append(c);}grid.append(col);}
+  body.append(grid);
+  for(const h of hs){const S=habitStats(h);const card=el('div','stat');card.append(el('b',null,h.res.name+'・'+h.name),el('span',null,schedText(h)+'・近 30 天完成率 '+S.rate+'%・最長連續 '+S.best+'・現在連續 '+streak(h)+'・累計 '+S.total+' 次'));
+    const bars=el('div','wkbars');for(let i=0;i<7;i++){const v=S.wkDue[i]?S.wk[i]/S.wkDue[i]:0;const b=el('div','wb');const f=el('i');f.style.height=Math.round(v*100)+'%';b.append(f,el('small',null,'一二三四五六日'[i]));b.title='週'+'一二三四五六日'[i]+' '+Math.round(v*100)+'%';bars.append(b);}
+    const worst=S.wkDue.map((d,i)=>[d?S.wk[i]/d:1,i]).filter(x=>S.wkDue[x[1]]>=2).sort((a,b)=>a[0]-b[0])[0];
+    card.append(bars);if(worst&&worst[0]<.6)card.append(el('small','hint','週'+'一二三四五六日'[worst[1]]+'最常忘記，可以設個提醒喔！'));body.append(card);}}
+/* welcome back greeting */
+function welcomeBack(sec,notes){if(sec<7200)return;const cand=RES.filter(r=>r.state!=='away'&&!(r.state==='act'&&r.step&&r.step.sleep)&&habitById(r.id));if(!cand.length)return;
+  const r=cand.map(x=>[x,habitById(x.id).fav]).sort((a,b)=>b[1]-a[1])[0][0];const h=habitById(r.id);const hrs=Math.round(sec/3600);
+  const news=notes.filter(n=>!/^📬/.test(n)).slice(-2);const txt=(hrs>=20?'你終於回來了！我好想你～':'你回來啦！')+(news.length?'你不在的時候，'+news.map(x=>x.replace(/[。！]$/,'')).join('，還有')+'！':'家裡一切都很好喔！');
+  setTimeout(()=>{select(r.id,false);showVN(r,tone(h,txt));setPemo(r,'love',8);r.celebrate=2.5;showBub(r,'heart',3);},900);}
+
 /* ---------- per-frame resident update ---------- */
 function updateResident(r,dtR,dtG){
   const h=habitById(r.id);if(!h)return;useFloor(r.f);const active=isActive(h);const n=r.needs;const P=persOf(h);const lv=levelOf(h);
@@ -2705,6 +2806,7 @@ function opener(r){
   if(r.step&&r.step.fight)return tone(h,'不要管我！我現在很生氣！');
   if(r.step&&r.step.sleep&&r.state==='act')return choice(['呼…呼…（睡得正香）','嗯…再五分鐘…','zzZ…（翻了個身）']);
   if(n.bladder>80)return '等等！我現在好想上廁所！';
+  {const nl=noteLine(h);if(nl&&Math.random()<.35)return tone(h,nl);}
   {const CO=countryOf(h);if(Math.random()<.18)return tone(h,choice([CO.hi+(CO===COUNTRIES.tw?'今天也要加油喔！':'這是我家鄉的打招呼方式！'),'好想念'+CO.n+'的'+CO.food+'…',CO===COUNTRIES.tw?'你喜歡吃'+CO.food+'嗎？':'在'+CO.n+'長大的我，最喜歡這個小屋的熱鬧了。']));}
   if(n.hunger<25)pool.push('肚子好餓喔…','我餓到可以吃下一頭牛了。');
   if(n.energy<25)pool.push('好睏…眼睛快張不開了。');
@@ -2907,7 +3009,7 @@ function say(r,text,emo){const h=habitById(r.id);r.say={text,until:performance.n
 let busyChat=false;
 async function sendChat(text){
   const r=RES.find(x=>x.id===selected);if(!r||busyChat)return;const h=habitById(r.id);text=text.trim();if(!text)return;
-  pushChat(h,'me',text);
+  pushChat(h,'me',text);taskHit('chat');
   if(/秘密|悄悄話|告訴我.*事/.test(text)){setTimeout(()=>{if(h.fav>=40)tellSecret(r);else say(r,tone(h,'才不告訴你呢～等我們更熟一點吧。'),'shy');},500);return;}
   busyChat=true;const typing=$('#chatTyping');if(typing)typing.hidden=false;let out=null;
   if(AI.on&&AI.fn){try{out=await aiReply(r,text);}catch(e){if(e&&e.code==='not_granted'){AI.on=false;AI.denied=true;pushChat(h,'sys','沒有開啟 Claude 對話，改用內建回覆');}}}
@@ -2950,7 +3052,7 @@ function command(r,c,fromChat){
 function giftPrefs(h){const sig=sigOf(h.name);const keys=Object.keys(GIFTS).filter(k=>k!=='ring');const s=hashStr(h.id);
   const pk=persKey(h);const persGift={foodie:'cake',artsy:'novel',perfect:'perfume',chuuni:'gamecard',passion:'sneakers',shy:'teddy',lazy:'teddy',sunny:'flower',gentle:'flower',tsun:'choco',sassy:'perfume',airhead:'choco'}[pk];
   const likes=new Set([sig?sig.gift:keys[s%keys.length],persGift||keys[(s>>3)%keys.length]]);let dis=keys[(s>>7)%keys.length];if(likes.has(dis))dis=keys[((s>>7)+3)%keys.length];if(likes.has(dis))dis=null;return{likes,dis};}
-function giveGift(h,gid){
+function giveGift(h,gid){taskHit('gift');
   const r=RES.find(x=>x.id===h.id);if(!r||!(state.gifts[gid]>0))return;state.gifts[gid]--;
   const g0=GIFTS[gid];let fav,mood,line,emo,bonus=0;const P=persOf(h);
   if(gid==='ring'){const pid=partnerOf(h.id);if(pid){const rel=relGet(h.id,pid);rel.ring=true;rel.aff=clamp(rel.aff+10,0,100);fav=10;mood=25;emo='love';
@@ -3120,7 +3222,7 @@ function ghostAt(sx,sy){const gh=build.ghost;if(!gh)return;useFloor(viewFloor);c
   if(def.wall){let best=null,bd=40;for(const sl of wallSlots()){const[cx,cy]=slotCenter(sl);const d=Math.hypot(cx-sx,cy-sy);if(d<bd){bd=d;best=sl;}}gh.slot=best?best.k:null;}
   else{const t=tileAt(sx,sy);const W=gh.r%2?def.d:def.w,D=gh.r%2?def.w:def.d;gh.tx=t[0]-Math.floor((W-1)/2);gh.ty=t[1]-Math.floor((D-1)/2);}
   validateGhost();renderBuildBar();}
-function placeGhost(){const gh=build.ghost;if(!gh)return;validateGhost();if(!gh.ok){toast(build.why||'這裡放不下');return;}
+function placeGhost(){const gh=build.ghost;if(!gh)return;validateGhost();if(!gh.ok){toast(build.why||'這裡放不下');return;}taskHit('decorate');
   const def=CAT[gh.id];
   if(gh.move){const p=state.placed.find(x=>x.u===gh.move);if(p){if(def.wall)p.slot=gh.slot;else{p.tx=gh.tx;p.ty=gh.ty;p.r=gh.r;}p.f=viewFloor;}}
   else{if(!(state.inv[gh.id]>0)){toast('倉庫裡沒有這件家具了');build.ghost=null;return;}state.inv[gh.id]--;
@@ -3137,7 +3239,7 @@ function rotateSel(){const p=state.placed.find(x=>x.u===build.sel);if(!p||CAT[p.
     if(!found){const room=roomAt(p.tx,p.ty);if(room){const c=[];for(let y=room.y;y<room.y+room.h;y++)for(let x=room.x;x<room.x+room.w;x++)c.push([x,y]);c.sort((a,b)=>Math.hypot(a[0]-bx,a[1]-by)-Math.hypot(b[0]-bx,b[1]-by));
       for(const[x,y]of c){if(canPlace(p.id,x,y,nr,p.u).ok){found=[nr,x,y];break;}}}}}
   if(!found){toast('這個位置轉不過來（'+why+'），先移到空一點的地方再轉');return;}
-  const[nr,nx,ny]=found;const want=((p.r|0)+1)%4;if(nr!==want)toast('這個房間放不下 '+want*90+'° 的方向，轉到 '+nr*90+'°');else if(Math.abs(nx-p.tx)+Math.abs(ny-p.ty)>2)toast('轉到 '+nr*90+'°，原位置放不下，幫你挪到旁邊');p.r=nr;p.tx=nx;p.ty=ny;rebuild();saveSoon();renderBuildBar();}
+  taskHit('decorate');const[nr,nx,ny]=found;const want=((p.r|0)+1)%4;if(nr!==want)toast('這個房間放不下 '+want*90+'° 的方向，轉到 '+nr*90+'°');else if(Math.abs(nx-p.tx)+Math.abs(ny-p.ty)>2)toast('轉到 '+nr*90+'°，原位置放不下，幫你挪到旁邊');p.r=nr;p.tx=nx;p.ty=ny;rebuild();saveSoon();renderBuildBar();}
 function tileAt(sx,sy){const a=sx-BASE_OX,b=2*(sy-BASE_OY);return[Math.floor((a+b)/2/T),Math.floor((b-a)/2/T)];}
 function placedAt(sx,sy){
   useFloor(viewFloor);
@@ -3279,7 +3381,7 @@ function showAwayReport(){
   const uniq=[...new Set(AWAY.notes)].slice(-3);
   const nl=AWAY.letters||0;AWAY.letters=0;
   AWAY.sec=0;AWAY.notes=[];AWAY.startMin=null;
-  if(nl>0)setTimeout(()=>openInbox(),600);
+  welcomeBack(sec,AWAY.notes.slice());if(nl>0)setTimeout(()=>openInbox(),sec>=7200?4000:600);
   toast('歡迎回來！你離開了'+away+'，小屋裡過了 '+span+(uniq.length?'\n'+uniq.join('\n'):''),true);
   renderList();if(curTab==='res')renderRes();
 }
@@ -3348,21 +3450,33 @@ function moodInfo(v){return v>75?['很開心','smile']:v>50?['心情不錯','smi
 function favLevel(f){return f>=80?'最喜歡你':f>=60?'很喜歡你':f>=40?'和你很熟':f>=20?'認識你':'還有點陌生';}
 function renderTop(){$('#coins').textContent=state.coins;}
 function renderList(){
-  const ul=$('#habitList');ul.innerHTML='';const t=today();let done=0;const hs=[...state.habits].sort((a,b)=>a.slot-b.slot);
-  for(const h of hs){const ok=isChecked(h,t);if(ok)done++;
+  const ul=$('#habitList');ul.innerHTML='';const t=today();let done=0,dueN=0;const hs=[...state.habits].sort((a,b)=>a.slot-b.slot);
+  for(const h of hs){const ok=isChecked(h,t);const due=dueToday(h);if(due||ok)dueN++;if(ok)done++;
     const li=document.createElement('li');li.className='habit';li.setAttribute('aria-current',h.id===selected?'true':'false');li.tabIndex=0;
     const cv=avatar(document.createElement('canvas'),h.res.look,!isActive(h),false,flagsOf(h));
     const mid=document.createElement('div');mid.style.minWidth='0';const nm=document.createElement('div');nm.className='nm';
     const fl=document.createElement('span');fl.className='fl';fl.textContent=(floorOfSlot(h.slot)+1)+'F';nm.append(fl,document.createTextNode(h.name));
     if(h.example){const ex=document.createElement('span');ex.className='ex';ex.textContent='範例';nm.appendChild(ex);}
     const sub=document.createElement('div');sub.className='sub';const s=streak(h);const lv=levelOf(h);sub.append(document.createTextNode(h.res.name+'（'+persOf(h).name+'）· '));
-    const b=document.createElement('b');b.textContent=s?('連續 '+s+' 天'+(lv?' ★'+lv:'')):(isActive(h)?'今天開始':'中斷了');sub.append(b);
-    mid.append(nm,sub);
+    const b=document.createElement('b');b.textContent=s?('連續 '+s+(schedOf(h).type==='weekly'?' 次':' 天')+(lv?' ★'+lv:'')):(isActive(h)?'今天開始':'中斷了');sub.append(b);
+    sub.append(document.createTextNode(' · '+schedText(h)+(restOn(h,t)?' · 今天休息':!due&&!ok?' · 今天不用做':'')));
+    mid.append(nm,sub);const g=goalOf(h);
+    if(g){const q=qtyToday(h);const qb=el('div','qty');const bar=el('div','bar');const fi=el('i');fi.style.width=Math.min(100,q/g.target*100)+'%';fi.style.background='#3fa3c9';bar.append(fi);
+      const plus=el('button','btn sm','＋'+(g.step||Math.ceil(g.target/4))+(g.unit||''));plus.type='button';plus.onclick=e=>{e.stopPropagation();addQty(h,g.step||Math.ceil(g.target/4));};
+      qb.append(bar,el('small',null,q+' / '+g.target+(g.unit||'')),plus);mid.append(qb);}
+    if(!ok&&(due||canPatchYesterday(h))){const ex=el('div','hx');const R=restInfo();
+      if(due&&!restOn(h,t)&&R.left>0){const rb=el('button','link','今天請假（休息券 '+R.left+'）');rb.type='button';rb.onclick=e=>{e.stopPropagation();useRest(h,t);};ex.append(rb);}
+      if(canPatchYesterday(h)&&R.left>0&&isChecked(h,addDays(t,-2))){const pb=el('button','link','昨天忘了？用休息券補救');pb.type='button';pb.onclick=e=>{e.stopPropagation();useRest(h,addDays(t,-1));};ex.append(pb);}
+      if(ex.children.length)mid.append(ex);}
+    if(noteFor===h.id&&ok){const nb=el('div','notebar');nb.onclick=e=>e.stopPropagation();nb.append(el('small',null,'今天感覺如何？'));
+      const inp=document.createElement('input');inp.className='t';inp.maxLength=40;inp.placeholder='寫一句話（可不填）';
+      NOTE_MOODS.forEach((em,i)=>{const mb=el('button','mood',em);mb.type='button';mb.title=NOTE_WORD[i];mb.onclick=()=>saveNote(h,i,inp.value);nb.append(mb);});
+      const x=el('button','link','略過');x.type='button';x.onclick=()=>{noteFor=null;renderList();};nb.append(inp,x);mid.append(nb);}
     const btn=document.createElement('button');btn.type='button';btn.className='check'+(ok?' done':'');btn.textContent=ok?'✓ 完成':'打卡';btn.setAttribute('aria-label',(ok?'取消今天的打卡：':'今天打卡：')+h.name);
     btn.onclick=e=>{e.stopPropagation();toggleCheck(h);};
     li.append(cv,mid,btn);li.onclick=()=>select(h.id,true);li.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();select(h.id,true);}};ul.append(li);}
   if(!hs.length){const li=document.createElement('li');li.className='empty';li.textContent='小屋還空著。新增第一個習慣，就會有一位小居民搬進來。';ul.append(li);}
-  $('#todayCount').textContent=done+' / '+hs.length;updateTitle(done,hs.length);$('#todayProg').style.width=(hs.length?done/hs.length*100:0)+'%';
+  $('#todayCount').textContent=done+' / '+dueN;updateTitle(done,dueN);$('#todayProg').style.width=(dueN?Math.min(1,done/dueN)*100:0)+'%';renderTasks();
   renderTop();$('#exBanner').hidden=!state.habits.some(h=>h.example);
   const ab=$('#addBtn');ab.disabled=state.habits.length>=MAXH;ab.textContent=state.habits.length>=MAXH?'小屋住滿了（40/40）':'＋ 新增習慣（'+state.habits.length+'/40）';
   renderFloors();renderParty();renderInboxBadge();if(curTab==='res')renderRes();
@@ -3454,7 +3568,11 @@ function renderRes(){
   const kids=state.babies.filter(b=>b.parents.includes(h.id));let kc=null;if(kids.length){kc=el('div','jobcard');kc.append(el('b',null,'👶 孩子'));
     for(const b of kids){const B=BABIES.find(x=>x.id===b.id);kc.append(document.createElement('br'),document.createTextNode(b.name+'（'+KID_STAGE[kidStage(b)]+'）・照顧 '+Math.round(b.care==null?80:b.care)+'%・'+(B&&B.sleep?(B.inCrib?'在嬰兒床睡覺':'在睡覺'):B&&B.alone?'沒人在家，自己待著':'有大人陪著')));}
     kc.append(document.createElement('br'),el('small',null,'嬰兒床：'+cribCount()+' 張（嬰兒和小孩需要，每人一張）'));}
-  p.append(head,pers,jc,...(hm?[hm]:[]),...(kc?[kc]:[]),dm,lvc,mood,doing,needs,H('叫他去做'),cmds,H('聊天'),chat,typing,form,quick,ai,H('好感與人際'),gift,rels,sec,H('打卡紀錄'),cal,cl,row);
+  const cc=el('div','dreamcard');{const c=chalOf(h);if(c){const C=CHALLENGES.find(x=>x.id===c.id);const pr=chalProg(h);cc.append(el('b',null,'🎯 '+C.name+'（'+h.name+'）'));const bar=el('div','bar');const bi=el('i');bi.style.width=Math.min(100,pr/C.len*100)+'%';bi.style.background='#f39a3b';bar.append(bi);
+      const gv=el('button','btn sm','放棄挑戰');gv.type='button';gv.onclick=()=>confirmDo('確定要放棄「'+C.name+'」嗎？',()=>{h.chal=null;saveSoon();renderRes();});cc.append(bar,el('span',null,'已完成 '+Math.min(pr,C.len)+' / '+C.len+' 次・完成獎勵 '+C.coins+' 金幣・中途斷掉就要重來（休息券可以保護）'),document.createTextNode(' '),gv);}
+    else{cc.append(el('b',null,'🎯 習慣挑戰'),document.createElement('br'));const row=el('div','lopts');for(const C of CHALLENGES){const b=el('button','btn sm',C.name+'（'+C.coins+'）');b.type='button';b.onclick=()=>startChal(h,C.id);row.append(b);}cc.append(row);
+      if((h.chalsDone||[]).length)cc.append(el('small',null,'已完成：'+h.chalsDone.map(id=>CHALLENGES.find(x=>x.id===id).name).join('、')));}}
+  p.append(head,pers,jc,cc,...(hm?[hm]:[]),...(kc?[kc]:[]),dm,lvc,mood,doing,needs,H('叫他去做'),cmds,H('聊天'),chat,typing,form,quick,ai,H('好感與人際'),gift,rels,sec,H('打卡紀錄'),cal,cl,row);
   chat.scrollTop=chat.scrollHeight;liveUI();
 }
 function liveUI(){
@@ -3472,9 +3590,9 @@ function liveUI(){
   if(feedDirty){feedDirty=false;const f=$('#feed');f.innerHTML='';if(!feed.length)f.innerHTML='<li class="empty" style="display:block">居民們的生活片段會出現在這裡。</li>';
     for(const e of feed){const li=el('li');li.append(el('time',null,e.t),el('span',null,e.text));f.append(li);}}
   if(EMG)renderAlert();updateVN();
-  if(today()!==lastDay){lastDay=today();renderList();weeklyCheck();checkAch();}
+  if(today()!==lastDay){lastDay=today();for(const h of state.habits)chalCheck(h);renderList();weeklyCheck();checkAch();}
 }
-function select(id,fromUser){if(vnFor&&vnFor!==id){$('#vn').hidden=true;vnFor=null;}selected=id;const r=RES.find(x=>x.id===id);
+function select(id,fromUser){if(fromUser)taskHit('visit',id);if(vnFor&&vnFor!==id){$('#vn').hidden=true;vnFor=null;}selected=id;const r=RES.find(x=>x.id===id);
   if(fromUser){if(r&&r.f!==viewFloor&&r.state!=='stairs')setView(r.f);const b=state.babies.find(x=>x.id===id)||petsArr().find(x=>x.id===id);if(b)setView(0);
     showTab('res');const now=performance.now()/1000;if(r&&now-r.lastGreet>20){r.lastGreet=now;say(r,opener(r),null);if(r.secretReady)setTimeout(()=>tellSecret(r),1600);}
     else if(r&&r.secretReady)tellSecret(r);else if(r&&r.say)showVN(r,r.say.text);}
@@ -3482,12 +3600,13 @@ function select(id,fromUser){if(vnFor&&vnFor!==id){$('#vn').hidden=true;vnFor=nu
 function toggleCheck(h){
   const t=today();const r=RES.find(x=>x.id===h.id);const lvBefore=levelOf(h);
   if(isChecked(h,t)){h.checks=h.checks.filter(d=>d!==t);const lose=10+bonus(h,true);state.coins=Math.max(0,state.coins-lose);toast('已取消今天的打卡（−'+lose+' 金幣）');}
-  else{const was=isActive(h);h.checks.push(t);h.checks.sort();const s=streak(h);const gain=10+bonus(h);state.coins+=gain;h.fav=clamp(h.fav+3,0,100);
+  else{const was=isActive(h);h.checks.push(t);h.checks.sort();const g0=goalOf(h);if(g0){h.qty=h.qty||{};h.qty[t]=Math.max(h.qty[t]||0,g0.target);}noteFor=h.id;const s=streak(h);const gain=10+bonus(h);state.coins+=gain;h.fav=clamp(h.fav+3,0,100);
     const lv=levelOf(h);
     if(lv>lvBefore){const msg=h.res.name+' 連續 '+s+' 天，精進到 Lv'+lv+'！解鎖「'+LEVELS[lv]+'」';toast(msg+'（+'+gain+' 金幣）',true);log('★ '+msg);if(r){r.celebrate=3.5;showBub(r,'star',3.5);say(r,tone(h,'哇！我感覺自己變強了！'),'happy');}}
     else toast('打卡成功！+'+gain+' 金幣 · 連續 '+s+' 天'+(s%5===4?'（明天就升級！）':''));
     if(r){if(lv<=lvBefore){r.celebrate=2.2;showBub(r,'heart',3);}r.needs.mood=clamp(r.needs.mood+20,0,100);
       if(!was){log(r.name+' 重新振作起來了！');abortPlan(r);say(r,tone(h,'謝謝你！我又有動力了！'),'happy');}else if(lv<=lvBefore)log(r.name+' 完成了今天的「'+h.name+'」');}}
+  if(isChecked(h,t)){chalCheck(h);if(state.habits.every(x=>isChecked(x,t)||!dueToday(x)))taskHit('checkall');}
   saveSoon();renderList();
 }
 function bonus(h,undo){const s=streak(h)+(undo?1:0);return s>=7?10:s>=3?5:0;}
@@ -3528,11 +3647,20 @@ function openHabit(id){
   draftPers=h?JSON.parse(JSON.stringify(h.pers)):defaultPers('',null);if(!draftPers.custom)draftPers.custom={name:'',desc:'',base:'sunny'};persTouched=!!h;
   $('#mHabitT').textContent=h?'編輯習慣與居民':'新增習慣';$('#hSubmit').textContent=h?'儲存':'入住小屋';
   $('#hName').value=h?h.name:'';$('#rName').value=h?h.res.name:'';
-  const sg=$('#sugs');sg.innerHTML='';if(!h)for(const s of SUGGEST){const b=document.createElement('button');b.type='button';b.textContent=s;b.onclick=()=>{$('#hName').value=s;onHabitName();$('#rName').focus();};sg.append(b);}
+  const sg=$('#sugs');sg.innerHTML='';if(!h)for(const s of SUGGEST){const b=document.createElement('button');b.type='button';b.textContent=s;b.onclick=()=>{$('#hName').value=s;onHabitName();if(/喝水/.test(s)&&!$('#gTarget').value){$('#gTarget').value=2000;$('#gUnit').value='ml';$('#gStep').value=250;}$('#rName').focus();};sg.append(b);}
   const js=$('#hJob');js.innerHTML='';for(const k of JOB_ORDER){const op=document.createElement('option');op.value=k;op.textContent=JOBS[k].name;js.append(op);}
   js.value=h?(h.job||'none'):defaultJob('',Math.random());$('#jobDesc').textContent=jobDesc(jobOf({job:js.value}));
+  draftSched=h?JSON.parse(JSON.stringify(schedOf(h))):{type:'daily'};buildFreq();
+  const g=h&&goalOf(h);$('#gTarget').value=g?g.target:'';$('#gUnit').value=g?(g.unit||''):'';$('#gStep').value=g?(g.step||''):'';
   buildMaker();buildPers();openModal('#mHabit');
 }
+let draftSched={type:'daily'};
+function buildFreq(){const o=$('#freqOpts');o.innerHTML='';const S=draftSched;
+  for(const[k,l]of[['daily','每天'],['days','指定星期'],['weekly','每週幾次']]){const b=el('button','pill',l);b.type='button';b.setAttribute('aria-pressed',String(S.type===k));
+    b.onclick=()=>{S.type=k;if(k==='days'&&!(S.days&&S.days.length))S.days=[0,2,4];if(k==='weekly'&&!S.times)S.times=3;buildFreq();};o.append(b);}
+  if(S.type==='days'){const d=el('div','opt');for(let i=0;i<7;i++){const b=el('button','pill','週'+'一二三四五六日'[i]);b.type='button';b.setAttribute('aria-pressed',String((S.days||[]).includes(i)));
+      b.onclick=()=>{S.days=S.days||[];if(S.days.includes(i)){if(S.days.length>1)S.days=S.days.filter(x=>x!==i);}else S.days.push(i);S.days.sort();buildFreq();};d.append(b);}o.append(d);}
+  if(S.type==='weekly'){const d=el('div','opt');for(let n=1;n<=6;n++){const b=el('button','pill',n+' 次');b.type='button';b.setAttribute('aria-pressed',String(S.times===n));b.onclick=()=>{S.times=n;buildFreq();};d.append(b);}o.append(d);}}
 $('#hJob').addEventListener('change',e=>{jobTouched=true;$('#jobDesc').textContent=jobDesc(JOBS[e.target.value]||JOBS.none);});
 $('#addBtn').onclick=()=>{if(state.habits.length>=MAXH){toast('小屋住滿了');return;}openHabit(null);};
 $('#persRoll').onclick=()=>{persTouched=true;const c=draftPers.custom;draftPers=fillTraits([],null,Math.random().toString(36));draftPers.custom=c||{name:'',desc:'',base:'sunny'};buildPers();};
@@ -3597,10 +3725,12 @@ $('#habitForm').onsubmit=e=>{e.preventDefault();const name=$('#hName').value.tri
   const cu=draftPers.traits.includes('custom')?{name:(draftPers.custom.name||'').trim()||'自訂個性',desc:(draftPers.custom.desc||'').trim(),base:draftPers.custom.base||'sunny'}:null;
   let pers=fillTraits(draftPers.traits.slice(),cu,name+rn);if(draftPers.traits.length<3)toast('已自動補上個性：'+persOfP(pers).name);
   const job=JOBS[$('#hJob').value]?$('#hJob').value:'none';if(draftGender==='f')draft.beard=0;
-  if(editId){const h=habitById(editId);if(h.job!==job){h.job=job;h.shifts=0;h.promo=0;h.lastShift=null;}h.name=name;h.res.name=rn;h.gender=draftGender;h.res.look=Object.assign({},draft);h.pers=pers;const r=RES.find(x=>x.id===editId);if(r)r.alt=null;rebuild();toast('已更新「'+rn+'」');}
+  const gt=parseFloat($('#gTarget').value);const goal=gt>0?{target:gt,unit:$('#gUnit').value.trim().slice(0,6),step:parseFloat($('#gStep').value)>0?parseFloat($('#gStep').value):Math.ceil(gt/4)}:null;
+  const sched=JSON.parse(JSON.stringify(draftSched));
+  if(editId){const h=habitById(editId);h.sched=sched;h.goal=goal;if(h.job!==job){h.job=job;h.shifts=0;h.promo=0;h.lastShift=null;}h.name=name;h.res.name=rn;h.gender=draftGender;h.res.look=Object.assign({},draft);h.pers=pers;const r=RES.find(x=>x.id===editId);if(r)r.alt=null;rebuild();toast('已更新「'+rn+'」');}
   else{if(state.habits.length>=MAXH)return;const used=new Set(state.habits.map(h=>h.slot));let slot=0;while(used.has(slot))slot++;
     const newFloor=floorOfSlot(slot)>=WORLDS.length;
-    const h=makeHabit(name,rn,draftGender,Object.assign({},draft),slot,pers);h.job=job;h.money=60;state.habits.push(h);
+    const h=makeHabit(name,rn,draftGender,Object.assign({},draft),slot,pers);h.job=job;h.sched=sched;h.goal=goal;h.money=60;state.habits.push(h);
     const sig=sigOf(name);const list=[];for(const k of['bed','wardrobe']){if(state.inv[k]>0)state.inv[k]--;list.push(k);}if(sig&&sig.item)list.push(sig.item);state.pendingDefaults[h.id]=list;
     for(const o of state.habits)if(o!==h)relGet(h.id,o.id);
     selected=h.id;rebuild();setView(floorOfSlot(slot));const r=RES.find(x=>x.id===h.id);if(r){r.celebrate=2.5;showBub(r,'heart',3);}
