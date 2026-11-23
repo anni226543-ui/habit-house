@@ -315,6 +315,10 @@ button.chip.mail{background:#e9f3ff;color:var(--ink);position:relative}
 .wkr i.on{background:var(--green)}.wkr i.fut{background:#eee;border-style:dashed}.wkr i.h{border:0;background:none}
 .dreamcard{font-size:12px;border:2px solid var(--ink);padding:6px 8px;margin:8px 0;background:#f4f0ff}
 .dreamcard .bar{margin:4px 0}
+.town{position:relative;width:100%;margin-bottom:8px;border:2px solid var(--ink)}.town canvas{width:100%;display:block;image-rendering:pixelated}
+.tplace{position:absolute;transform:translate(0,-2px);background:rgba(255,255,255,.88);border:2px solid var(--ink);font-size:11px;padding:1px 4px;cursor:pointer;display:flex;flex-direction:column;align-items:flex-start;gap:1px;font-family:inherit;max-width:24%}
+.tplace.sel{background:var(--gold)}.tav{display:flex;gap:1px;align-items:center}.tav canvas{width:16px;height:16px;image-rendering:pixelated}.tav small{font-size:10px}
+.trow{display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer}.trow canvas{width:24px;height:24px;image-rendering:pixelated;flex:none}
 .timeline{list-style:none;margin:6px 0;padding:0;display:grid;gap:4px;font-size:12px;max-height:260px;overflow:auto}.timeline li{border-left:3px solid var(--gold);padding:2px 6px;background:#fffaf0;line-height:1.5}
 .qty{display:flex;align-items:center;gap:6px;margin-top:4px}.qty .bar{flex:1;min-width:60px;margin:0}.qty small{font-size:11px;white-space:nowrap}
 .hx{margin-top:3px;display:flex;flex-wrap:wrap;gap:8px}.link{background:none;border:0;padding:0;color:var(--blue);text-decoration:underline;cursor:pointer;font-size:12px;font-family:inherit}
@@ -348,6 +352,7 @@ button.chip.mail{background:#e9f3ff;color:var(--ink);position:relative}
       <canvas id="view"></canvas>
       <div class="tools">
         <button type="button" id="buildBtn" aria-pressed="false">佈置模式</button>
+        <button type="button" id="townBtn">小鎮地圖</button>
       </div>
       <div class="floors" id="floors" aria-label="樓層"></div>
       <div class="alert" id="alert" hidden role="alert"></div>
@@ -378,7 +383,7 @@ button.chip.mail{background:#e9f3ff;color:var(--ink);position:relative}
         </div>
         <div class="panel" id="taskPanel"></div>
         <div class="panel"><h2>小屋功能</h2><div class="fbtns">
-          <button type="button" class="btn" data-feat="album">📷 相簿</button><button type="button" class="btn" data-feat="ach">🏆 成就</button><button type="button" class="btn" data-feat="report">📊 本週報告</button><button type="button" class="btn" data-feat="stats">📈 統計</button><button type="button" class="btn" data-feat="rating">🏅 小屋評分</button><button type="button" class="btn" data-feat="closet">👕 服裝店</button><button type="button" class="btn" data-feat="garden">🌱 庭院</button><button type="button" class="btn" data-feat="pets">🐾 寵物</button></div></div>
+          <button type="button" class="btn" data-feat="town">🗺 小鎮地圖</button><button type="button" class="btn" data-feat="postcards">📮 明信片</button><button type="button" class="btn" data-feat="album">📷 相簿</button><button type="button" class="btn" data-feat="ach">🏆 成就</button><button type="button" class="btn" data-feat="report">📊 本週報告</button><button type="button" class="btn" data-feat="stats">📈 統計</button><button type="button" class="btn" data-feat="rating">🏅 小屋評分</button><button type="button" class="btn" data-feat="closet">👕 服裝店</button><button type="button" class="btn" data-feat="garden">🌱 庭院</button><button type="button" class="btn" data-feat="pets">🐾 寵物</button></div></div>
         <div class="panel" id="partyPanel"></div>
         <div class="panel"><h2>小屋動態</h2><ul class="feed" id="feed"></ul></div>
         <div class="panel" id="idlePanel">
@@ -1909,7 +1914,7 @@ function dayTick(){
   ensureWeekParty();if(wd>=3)rsvpAll();if(wd===5)confirmParty();
   for(const h of state.habits){if(h.preg&&day-h.preg.since>=21){birth(h.id,h.preg.partner);delete h.preg;}}
   for(const h of state.habits){const r=R_(h.id);if(r){dailyLife(r,h);dreamDaily(r,h);}}
-  guard('diary',()=>writeDiaries(day-1));guard('friends',friendEvents);
+  guard('diary',()=>writeDiaries(day-1));guard('town',townDaily);guard('friends',friendEvents);
   for(const ap of(state.apol||[]))if(habitById(ap.a)&&habitById(ap.b)){relAdd(ap.a,ap.b,8);log('💌 '+nameOf(ap.a)+' 寫了一封道歉信給 '+nameOf(ap.b)+'，兩人和好了');}state.apol=[];
   for(const h of state.habits)if(Math.random()<.06&&h.created<today()){scheduleVisit(h);break;}
   checkAch();
@@ -2089,7 +2094,7 @@ function startWork(r,h,sh){
   if(wfh){const kind=hasKind(j.wfh,r)?j.wfh:hasKind('desk',r)?'desk':null;
     if(kind){r.plan=[st(kind,Math.max(20,sh.e-gameMin),{txt:'在家工作（'+j.name+'）',work:true,late,essential:true,bub:'spark',prop:kind==='game'?'pad':kind==='easel'?'brush':null,paint:kind==='easel',eff:{mood:-.01}})];r.planAct='work';r.tries=0;nextStep(r);return true;}}
   r.plan=[st('exit',1,{txt:'出門去'+(j.place||'咖啡廳')+(wfh?'工作':'上班'),essential:true,leave:{kind:'work',until:sh.e+30,late,txt:'在'+(j.place||'咖啡廳')+'工作'}})];r.planAct='work';r.tries=0;nextStep(r);return true;}
-function goAway(r,lv){releaseSpot(r);r.plan=[];r.step=null;r.path=[];r.state='away';r.away=Object.assign({},lv);r.goF=null;
+function goAway(r,lv){releaseSpot(r);r.plan=[];r.step=null;r.path=[];r.state='away';r.away=Object.assign({t0:gameMin},lv);r.goF=null;
   r.doing=lv.txt+(lv.visible?'':'（'+hhmm(lv.until)+' 回家）');
   if(lv.visible){const gp=GP[lv.plot||0];r.f=0;r.px=(gp[0]+.6)*T;r.py=(gp[1]+1.45)*T;r.dir='NE';return;}
   if(lv.kind==='walk'){const pp=petsArr().find(x=>x.id===lv.pet);if(pp)pp.away=lv.until;}
@@ -2338,7 +2343,7 @@ function eventsHourly(){const day=houseDay(),hr=hour();
     const th={id:'g',name:g.name,bub:'food',prop:'fork'};
     if(!startGather('gather',[g.host].concat(friends),th,g.host,day*1440+g.end*60)){log(host.res.name+' 的「'+g.name+'」沒什麼人有空，只好改天了');moodAdd(g.host,-10);if(!g.free)host.money=(host.money||0)+60;}break;}
   if(Math.random()<.25)checkAch();
-  guard('visits',visitTick);
+  guard('visits',visitTick);guard('townev',townHourly);
   if(!state.live&&Math.random()<.04){const hosts=state.habits.filter(h=>(h.money||0)>=220&&persOf(h).social>=.6&&!letterPending('gather',h.id));if(hosts.length&&hr<17){const h=choice(hosts);h.money-=90;scheduleGather(h.id,choice(['火鍋聚會','燒肉宵夜','披薩之夜']));log(h.res.name+' 決定今晚自掏腰包請大家吃東西');}}
 }
 function dailyLife(r,h){const P=persOf(h);const day=houseDay();
@@ -2613,6 +2618,9 @@ function openFeat(kind){FEAT.cur=kind;const body=$('#featBody');body.innerHTML='
     const ul=el('ul','achs');for(const[id,name,desc,title,,coins]of ACH){const got=state.ach&&state.ach[id];const li=el('li',got?'got':'');li.append(el('b',null,(got?'🏆 ':'🔒 ')+name),el('span',null,desc+'（稱號「'+title+'」・'+coins+' 金幣）'));
       if(got){const b=el('button','btn sm'+(state.title===id?' primary':''),state.title===id?'使用中':'設為稱號');b.type='button';b.onclick=()=>{state.title=state.title===id?null:id;renderTitle();saveSoon();openFeat('ach');};li.append(b);}ul.append(li);}body.append(ul);}
   else if(kind==='stats'){T_.textContent='習慣統計';renderStats(body);}
+  else if(kind==='town'){T_.textContent='小鎮地圖';renderTown(body);}
+  else if(kind==='postcards'){T_.textContent='明信片收藏（'+postcardsArr().length+' 張）';if(!postcardsArr().length)body.append(el('p','empty','居民出門旅行時，會從各地寄明信片回來。'));
+    const grid=el('div','album');for(const pc of postcardsArr()){const f=el('figure','photo');const cv=document.createElement('canvas');drawPostcard(cv,pc);f.append(cv,el('figcaption',null,'來自 '+pc.dest+'・'+pc.name),el('small',null,'「'+pc.text+'」 '+calStr(pc.at,false)));grid.append(f);}body.append(grid);}
   else if(kind==='rating'){const R=houseRating();T_.textContent='小屋評分：'+R.total+' 分 '+'★★★★★'.slice(0,Math.max(1,Math.round(R.total/20)))+'☆☆☆☆☆'.slice(0,5-Math.max(1,Math.round(R.total/20)));
     for(const[nm,v,mx]of R.parts){const row=el('div','stat');row.append(el('b',null,nm+'　'+Math.round(v)+' / '+mx));const bar=el('div','bar');const i=el('i');i.style.width=Math.round(v/mx*100)+'%';bar.append(i);row.append(bar);body.append(row);}
     body.append(el('p','hint','提高評分：買不同種類的家具、讓每個房間都有床衣櫃和其他擺設、湊齊主題套組、讓居民開心、種菜養寵物、擴建頂樓和地下室。評分越高，「各國特色」家具解鎖越多。'));
@@ -2950,6 +2958,88 @@ function specialFixed(f,kind){
     obj(0,8,2,2,20,()=>{const X=0,Y=8*T;for(let i=0;i<4;i++)box(X+2+(i%2)*14,Y+2+Math.floor(i/2)*14,0,12,12,10+(i%3)*4,'#c9a77c');});}
 }
 
+/* =========================================================
+   Town map, travel postcards, town events
+   ========================================================= */
+const TOWN=[{id:'home',name:'習慣小屋',x:2,y:4,w:3,h:2,c:'#e4574f'},{id:'公司',name:'公司',x:7,y:1,w:2,h:2,c:'#6a7fa8'},{id:'學校',name:'學校',x:10,y:1,w:2,h:2,c:'#d9963e'},
+  {id:'醫院',name:'醫院',x:13,y:1,w:2,h:2,c:'#f4f4f4'},{id:'咖啡店',name:'咖啡店',x:7,y:5,w:2,h:1,c:'#8a5a3c'},{id:'餐廳',name:'餐廳',x:10,y:5,w:2,h:1,c:'#e86e6e'},
+  {id:'超商',name:'超商',x:13,y:5,w:1,h:1,c:'#3fa3c9'},{id:'健身房',name:'健身房',x:15,y:5,w:2,h:1,c:'#5d7a4a'},{id:'花店',name:'花店',x:2,y:8,w:2,h:1,c:'#ec7fb0'},
+  {id:'廣場',name:'中央廣場',x:7,y:8,w:3,h:2,c:'#c9c3b8'},{id:'商店街',name:'商店街',x:11,y:8,w:3,h:1,c:'#9b5fd0'},{id:'公園',name:'公園',x:15,y:8,w:2,h:2,c:'#62b356'},{id:'車站',name:'車站',x:16,y:1,w:2,h:2,c:'#8a8f9e'}];
+const PLACE_MAP={'公司':'公司','學校':'學校','醫院':'醫院','咖啡店':'咖啡店','咖啡廳':'咖啡店','餐廳':'餐廳','超商':'超商','健身房':'健身房','花店':'花店','街頭':'廣場'};
+function placeOf(r){if(r.state!=='away'||!r.away||r.away.visible)return 'home';const a=r.away,h=habitById(r.id);
+  if(a.kind==='work'){const j=jobOf(h);return PLACE_MAP[j.place||'咖啡廳']||'公司';}return{shop:'商店街',date:'公園',walk:'公園',trip:'車站',event:'廣場'}[a.kind]||'商店街';}
+function townGroups(){const g={};for(const r of RES){const k=placeOf(r);(g[k]=g[k]||[]).push(r);}return g;}
+let townSel='home';
+function drawTownBg(cv){const W=18*24,H=11*24;cv.width=W;cv.height=H;const c=cv.getContext('2d');const s=curSeason();
+  c.fillStyle=s==='winter'?'#e6edf3':s==='autumn'?'#c9b55c':'#7cc46a';c.fillRect(0,0,W,H);
+  c.fillStyle='#b8b2a6';for(const y of[3.5,6.6])c.fillRect(0,y*24,W,14);for(const x of[5.7,12.6])c.fillRect(x*24,0,14,H);
+  c.fillStyle='#f4efe6';for(const y of[3.5,6.6])for(let x=0;x<W;x+=16)c.fillRect(x,y*24+6,8,2);
+  c.fillStyle='#6aa7c9';c.fillRect(0,H-14,W,14);
+  for(let i=0;i<26;i++){const x=Math.floor(hash(i,1,3)*W),y=Math.floor(hash(1,i,3)*(H-20));c.fillStyle=s==='autumn'?'#d77a2a':s==='winter'?'#ffffff':'#3f8a3f';c.fillRect(x,y,6,6);c.fillStyle='#6b4a2e';c.fillRect(x+2,y+6,2,3);}
+  for(const P of TOWN){const x=P.x*24,y=P.y*24,w=P.w*24,h=P.h*24;c.fillStyle='rgba(0,0,0,.18)';c.fillRect(x+3,y+3,w,h);c.fillStyle=P.id==='公園'?'#4f9a45':P.id==='廣場'?'#d8d2c6':'#efe6d6';c.fillRect(x,y,w,h);
+    c.fillStyle=P.c;c.fillRect(x,y,w,P.id==='公園'||P.id==='廣場'?4:8);if(P.id!=='公園'&&P.id!=='廣場'){c.fillStyle='#8fd0f0';for(let k=x+5;k<x+w-6;k+=9)c.fillRect(k,y+12,5,5);}
+    if(P.id==='公園'){c.fillStyle='#2f7a34';c.fillRect(x+8,y+10,8,8);c.fillRect(x+28,y+22,8,8);}if(P.id==='廣場'){c.fillStyle='#7fc8f0';c.fillRect(x+w/2-6,y+h/2-6,12,12);}}
+  const ev=townEventNow();if(ev){const P=TOWN.find(p=>p.id==='廣場');c.fillStyle='#e43b44';for(let k=0;k<6;k++)c.fillRect(P.x*24+6+k*12,P.y*24+2,6,4);}}
+function renderTown(body){const wrap=el('div','town');const cv=document.createElement('canvas');drawTownBg(cv);wrap.append(cv);const G=townGroups();
+  for(const P of TOWN){const b=el('button','tplace'+(townSel===P.id?' sel':''));b.type='button';b.style.left=(P.x/18*100)+'%';b.style.top=(P.y/11*100)+'%';
+    b.append(el('span',null,P.name));const rs=G[P.id]||[];if(rs.length){const av=el('span','tav');for(const r of rs.slice(0,4))av.append(avatar(document.createElement('canvas'),r.look,false,false,flagsOf(habitById(r.id))));if(rs.length>4)av.append(el('small',null,'+'+(rs.length-4)));b.append(av);}
+    b.onclick=()=>{townSel=P.id;openFeat('town');};wrap.append(b);}
+  body.append(wrap);const P=TOWN.find(p=>p.id===townSel)||TOWN[0];const rs=G[P.id]||[];const box=el('div','stat');box.append(el('b',null,P.name+'（'+rs.length+' 人）'));
+  const ev=townEventNow();if(ev&&P.id==='廣場')box.append(el('span',null,'🎪 正在舉辦「'+ev.E.name+'」！'));
+  if(!rs.length)box.append(el('span',null,P.id==='home'?'大家都出門了。':'現在沒有居民在這裡。'));
+  for(const r of rs){const row=el('div','trow');row.append(avatar(document.createElement('canvas'),r.look,false,false,flagsOf(habitById(r.id))),el('span',null,r.name+'：'+(r.state==='away'&&r.away?r.away.txt+(r.away.dest?'（'+r.away.dest+'）':'')+'，'+hhmm(r.away.until)+' 回家':r.doing)));row.onclick=()=>{closeModal('#mFeat');select(r.id,true);};box.append(row);}
+  body.append(box,el('p','hint','點地點看看誰在那裡。居民上班、逛街、約會、旅行、參加活動時，都會出現在地圖上。'));}
+/* postcards */
+const DESTS=[{n:'京都',t:'temple',sky:['#f2a27a','#ffe0c0'],g:'#d77a2a',txt:'楓葉紅得好漂亮！寺廟好安靜。'},{n:'巴黎',t:'tower',sky:['#9fd4f2','#e6f4ff'],g:'#7cc46a',txt:'鐵塔好高！可頌超好吃。'},
+  {n:'首爾',t:'needle',sky:['#5b4d86','#f2a27a'],g:'#4f9a45',txt:'南山塔的夜景好美～'},{n:'台北',t:'tall',sky:['#8ccbf3','#e6f4ff'],g:'#62b356',txt:'101 好壯觀，夜市好熱鬧！'},
+  {n:'峇里島',t:'beach',sky:['#7fd0f0','#e6f9ff'],g:'#f2d58a',txt:'海水好藍，每天都在曬太陽～'},{n:'冰島',t:'aurora',sky:['#151935','#2c3170'],g:'#e6edf3',txt:'看到極光了！！'},
+  {n:'埃及',t:'pyramid',sky:['#f4c27a','#fff0c8'],g:'#e8c77a',txt:'金字塔比想像中還要大！'},{n:'瑞士',t:'mountain',sky:['#9fd4f2','#ffffff'],g:'#7cc46a',txt:'空氣好清新，雪山好美。'},
+  {n:'威尼斯',t:'canal',sky:['#f2a27a','#ffe7c8'],g:'#6aa7c9',txt:'坐了貢多拉，水都好浪漫。'},{n:'富士山',t:'fuji',sky:['#9fd4f2','#e6f4ff'],g:'#62b356',txt:'終於看到富士山了！'},
+  {n:'紐約',t:'city',sky:['#6a6fd8','#f2a7c3'],g:'#8a8f9e',txt:'時代廣場好多人，好熱鬧！'},{n:'里約',t:'statue',sky:['#8ccbf3','#e6f4ff'],g:'#4f9a45',txt:'海灘和山都好漂亮！'}];
+function postcardsArr(){if(!Array.isArray(state.postcards))state.postcards=[];return state.postcards;}
+function sendPostcard(r){const h=habitById(r.id);if(!h||!r.away)return;const D=choice(DESTS);r.away.dest=D.n;
+  postcardsArr().unshift({id:uidGen('pc'),from:h.id,name:h.res.name,dest:D.n,at:gameMin,text:tone(h,D.txt+(r.away.with?'和'+nameOf(r.away.with)+'玩得好開心！':''))});if(state.postcards.length>60)state.postcards.length=60;
+  log('📮 '+h.res.name+' 從'+D.n+'寄了一張明信片回來');if(!CATCHING)toast('📮 '+h.res.name+' 從'+D.n+'寄明信片回來了！');lifeLog(h.id,'📮','到'+D.n+'旅行');statAdd('postcards');}
+function drawPostcard(cv,pc){const W=120,H=80;cv.width=W;cv.height=H;const c=cv.getContext('2d');const D=DESTS.find(d=>d.n===pc.dest)||DESTS[0];
+  for(let y=0;y<H;y+=4){c.fillStyle=mix(D.sky[0],D.sky[1],y/H);c.fillRect(0,y,W,4);}c.fillStyle=D.g;c.fillRect(0,H-18,W,18);const F=(x,y,w,h,col)=>{c.fillStyle=col;c.fillRect(x,y,w,h);};
+  const t=D.t;if(t==='tower'){F(57,14,6,48,'#6b5644');F(50,40,20,3,'#6b5644');F(45,58,30,4,'#6b5644');F(53,28,14,2,'#6b5644');}
+  else if(t==='temple'){F(40,38,40,24,'#b5541f');F(34,34,52,5,'#3b2f2f');F(42,26,36,5,'#3b2f2f');F(50,18,20,5,'#3b2f2f');F(56,44,8,18,'#2a2233');}
+  else if(t==='needle'){F(58,10,4,48,'#e9e6f0');F(52,22,16,6,'#e9e6f0');for(let i=0;i<14;i++)F(Math.floor(hash(i,3,1)*W),Math.floor(hash(3,i,1)*30),1,1,'#ffffff');}
+  else if(t==='tall'){for(let i=0;i<8;i++)F(52+i,8+i*6,16-i*2,7,'#6aa7c9');F(50,56,20,6,'#4f6fd8');}
+  else if(t==='beach'){F(0,H-26,W,10,'#4fb3d9');F(84,30,3,34,'#8a5a3c');F(76,26,20,4,'#3f8a3f');F(80,22,12,4,'#3f8a3f');F(20,10,10,10,'#fff3a0');}
+  else if(t==='aurora'){for(let i=0;i<W;i+=2)F(i,18+Math.floor(Math.sin(i/9)*6),2,14,'rgba(80,240,160,.55)');for(let i=0;i<20;i++)F(Math.floor(hash(i,7,1)*W),Math.floor(hash(7,i,1)*40),1,1,'#ffffff');}
+  else if(t==='pyramid'){for(let i=0;i<24;i++)F(36+i,60-i*2,48-i*2,2,i%2?'#d8b070':'#e8c77a');F(90,50,12,12,'#d8b070');}
+  else if(t==='mountain'||t==='fuji'){for(let i=0;i<30;i++)F(30+i,62-i*1.6,60-i*2,2,t==='fuji'?'#6a7fa8':'#8a8f9e');for(let i=20;i<30;i++)F(30+i,62-i*1.6,60-i*2,2,'#ffffff');}
+  else if(t==='canal'){F(0,H-22,W,8,'#4f8fb8');for(let i=0;i<5;i++)F(6+i*23,30+(i%2)*6,18,32-(i%2)*6,['#e4574f','#f2cf4a','#f39a3b','#ec7fb0','#f4f4f4'][i]);F(50,54,22,3,'#2a2233');}
+  else if(t==='city'){for(let i=0;i<8;i++)F(4+i*15,20+(i*13)%24,12,60,['#3b3f4f','#5b6279','#2f3138'][i%3]);for(let i=0;i<30;i++)F(6+Math.floor(hash(i,5,2)*110),26+Math.floor(hash(5,i,2)*40),2,2,'#f4b41a');}
+  else if(t==='statue'){F(20,40,80,24,'#3f8a3f');F(58,14,4,26,'#e9e6f0');F(48,18,24,3,'#e9e6f0');}
+  F(W-20,4,16,12,'#ffffff');F(W-18,6,12,8,'#e4574f');}
+/* town events */
+const TOWN_EVENTS=[{id:'flower',name:'春季花市',m:3,d:14,likes:['romantic','gentle','artsy','florist'],comp:false,res:'大家逛花市買了好多盆栽，{W} 抱回一大束花'},
+  {id:'food',name:'美食節',m:4,d:20,likes:['foodie','sunny','spender'],comp:true,res:'{W} 在美食節的料理比賽拿下冠軍！'},
+  {id:'summer',name:'夏日祭',m:7,d:21,likes:['sunny','romantic','funny','passion'],comp:false,res:'穿著浴衣逛夏日祭，{W} 撈到了好多金魚'},
+  {id:'fire',name:'煙火大會',m:8,d:15,likes:['romantic','artsy','sunny','clingy'],comp:false,res:'煙火好美！{W} 和大家一起許了願'},
+  {id:'sports',name:'小鎮運動會',m:10,d:10,likes:['sporty','passion','boss','early'],comp:true,res:'{W} 在運動會的接力賽跑了第一名！'},
+  {id:'marathon',name:'小鎮馬拉松',m:11,d:7,likes:['sporty','passion','workaholic'],comp:true,res:'{W} 第一個衝過馬拉松終點！'},
+  {id:'flea',name:'跳蚤市場',m:5,d:12,likes:['thrifty','curious','helpful'],comp:false,res:'{W} 在跳蚤市場賣掉了舊東西，還挖到寶'},
+  {id:'xmas',name:'聖誕市集',m:12,d:18,likes:['romantic','gentle','spender','sunny'],comp:false,res:'聖誕市集好熱鬧，{W} 買了熱紅酒和薑餅人'},
+  {id:'flea2',name:'跳蚤市場',m:9,d:12,likes:['thrifty','curious','helpful'],comp:false,res:'{W} 在跳蚤市場賣掉了舊東西，還挖到寶'}];
+function townEventNow(){const T0=state.townEv;if(!T0||T0.day!==houseDay()||T0.done)return null;const E=TOWN_EVENTS.find(e=>e.id===T0.id);if(!E)return null;const hr=hour();return hr>=10&&hr<18?{E,T:T0}:null;}
+function townDaily(){const c=calOf(gameMin);const day=houseDay();
+  for(const E of TOWN_EVENTS){if(E.m!==c.m)continue;if(c.dm===E.d-2){const ids=state.habits.filter(h=>{const P=persOf(h);const w=.3+P.social*.3+P.keys.filter(k=>E.likes.includes(k)).length*.2+(E.likes.includes(h.job)?.3:0);return Math.random()<w;}).map(h=>h.id);
+      state.townEv={id:E.id,day:day+2,ids,cheer:{},done:false};log('🎪 後天小鎮要舉辦「'+E.name+'」！'+(ids.length?ids.map(nameOf).join('、')+' 報名參加':'這次沒人報名'));
+      const fan=ids.length?habitById(choice(ids)):null;if(fan&&E.comp)sendLetter('cheer',fan.id,tone(fan,'我報名了「'+E.name+'」！你會來幫我加油嗎？'),['一定會！（幫他加油打氣）','加油！要玩得開心'],{ev:E.id},1);}}}
+Object.assign(LETTERS,{cheer:{run(L,i){if(state.townEv&&state.townEv.id===L.data.ev){state.townEv.cheer[L.from]=i===0?2:1;}favAdd(L.from,i===0?5:2);return nameOf(L.from)+' 說：「有你加油，我一定會努力的！」';}}});
+function townHourly(){const T0=state.townEv;if(!T0||T0.done)return;const day=houseDay(),hr=hour();if(day>T0.day){T0.done=true;return;}if(day!==T0.day)return;const E=TOWN_EVENTS.find(e=>e.id===T0.id);if(!E)return;
+  if(hr>=10&&hr<11&&!T0.started){T0.started=true;const go=[];for(const id of T0.ids){const r=R_(id),h=habitById(id);if(!r||!h||r.state==='away'||workingNow(h))continue;abortPlan(r);
+      r.plan=[st('exit',1,{txt:'出門去參加'+E.name,essential:true,leave:{kind:'event',until:day*1440+18*60,txt:'在中央廣場參加'+E.name}})];r.planAct='event';r.tries=0;nextStep(r);go.push(id);}
+    T0.went=go;if(go.length){log('🎪 「'+E.name+'」開始了！'+go.map(nameOf).join('、')+' 出發去中央廣場');if(!CATCHING)toast('🎪 小鎮的「'+E.name+'」開始了！',true);}}
+  if(hr>=18&&!T0.done){T0.done=true;const ids=(T0.went||[]).filter(id=>habitById(id));if(!ids.length)return;
+    const w=wpick(ids,id=>1+persOf(habitById(id)).keys.filter(k=>E.likes.includes(k)).length*2+(T0.cheer[id]||0)*2);const text=E.res.replace('{W}',nameOf(w));
+    for(const id of ids){moodAdd(id,15);lifeLog(id,'🎪','參加'+E.name);}if(E.comp){const h=habitById(w);h.medals=(h.medals||0)+1;state.coins+=30;statAdd('medals');lifeLog(w,'🏅',E.name+'得到第一名');}
+    for(let i=0;i<ids.length;i++)for(let j=i+1;j<ids.length;j++)relAdd(ids[i],ids[j],3);
+    log('🎪 '+E.name+'結束：'+text);if(!CATCHING)toast('🎪 '+E.name+'結束！\n'+text+(E.comp?'（+30 金幣獎金）':''),true);addPhoto('party',E.name+'：'+text,ids);renderTop();}}
+
 /* ---------- per-frame resident update ---------- */
 function updateResident(r,dtR,dtG){
   const h=habitById(r.id);if(!h)return;useFloor(r.f);const active=isActive(h);const n=r.needs;const P=persOf(h);const lv=levelOf(h);
@@ -2967,6 +3057,7 @@ function updateResident(r,dtR,dtG){
   if(active&&h.fav>=40&&!r.secretReady){r.secretT-=dtR;if(r.secretT<=0){r.secretReady=true;r.secretT=rand(150,360);}}
   if(r.sick&&r.sick<=gameMin&&r.sick>0){r.sick=0;log(r.name+' 病好了');}
   if(!away&&r.room!=null){const rm=L.rooms[r.room];if(rm&&rm.type==='bed'&&rm.slot===h.slot){if(r.setT==null||(r.setT-=dtR)<=0){r.setT=20;r.sets=roomSets(h).length;}if(r.sets)n.mood=clamp(n.mood+.02*r.sets*dtG,0,100);}}
+  if(away&&r.away&&r.away.kind==='trip'&&!r.away.pc&&gameMin-(r.away.t0||gameMin)>((r.away.until||gameMin)-(r.away.t0||gameMin))/2){r.away.pc=true;guard('postcard',()=>sendPostcard(r));}
   if(away){if(n.hunger<35)n.hunger=clamp(n.hunger+45,0,100);if(n.hygiene<25&&r.away&&r.away.kind==='trip')n.hygiene=80;if(!r.away||gameMin>=r.away.until)comeHome(r);return;}
   if(r.state==='stairs'){r.stairT-=dtR*Math.sqrt(speed);if(r.stairT<=0){const to=r.goF;r.f=to;r.goF=null;r.tx=STAIRS[0];r.ty=STAIRS[1];r.px=(r.tx+.5)*T;r.py=(r.ty+.5)*T;useFloor(r.f);
       const sp=r.spot;const p=sp?bfs(r.tx,r.ty,sp.tx,sp.ty):null;if(!p){abortPlan(r);return;}r.path=p;r.state=p.length?'walk':'act';r.doing='走去'+r.step.txt;if(r.state==='act')arrive(r);}return;}
@@ -3806,6 +3897,7 @@ function liveUI(){
       document.getElementById('favTxt').textContent='對你的好感 '+Math.round(h.fav)+'：'+favLevel(h.fav);}
     document.querySelectorAll('#relList [data-rel]').forEach(e=>{const rel=relGet(r.id,e.dataset.rel);e.style.width=rel.aff+'%';});}
   const hh=Math.floor(hour()),mm=Math.floor((gameMin%60)/10)*10;
+  if(FEAT.cur==='town'&&!$('#mFeat').hidden&&uiPartyT%8===0)openFeat('town');
   const wxk=weatherNow();$('#clock').textContent=(WEATHER[wxk]?WEATHER[wxk].ic+' ':'')+calStr(gameMin,true);drawSunIco();if(uiPartyT++%10===0)renderParty();
   if(feedDirty){feedDirty=false;const f=$('#feed');f.innerHTML='';if(!feed.length)f.innerHTML='<li class="empty" style="display:block">居民們的生活片段會出現在這裡。</li>';
     for(const e of feed){const li=el('li');li.append(el('time',null,e.t),el('span',null,e.text));f.append(li);}}
@@ -4022,6 +4114,7 @@ function renderShop(){
   body.append(grid);
 }
 $('#shopBtn').onclick=()=>openShop();
+$('#townBtn').onclick=()=>openFeat('town');
 
 /* ---------- build panel ---------- */
 function renderBuild(){
