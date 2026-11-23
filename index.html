@@ -266,7 +266,11 @@ select.t{font-family:var(--pix);font-size:14px}
 
 html,body{margin:0}
 .app{padding-top:max(12px,env(safe-area-inset-top,0px));padding-bottom:max(12px,env(safe-area-inset-bottom,0px))}
-.toast{white-space:pre-line}
+.toast{white-space:pre-line}.toast.go{cursor:pointer}.toast.go::after{content:' ›';color:var(--gold)}
+.feed li.go{cursor:pointer}.feed li.go:hover span{text-decoration:underline}
+.tut{position:fixed;inset:0;z-index:70;pointer-events:auto}.tut-hl{position:fixed;border:3px solid var(--gold);box-shadow:0 0 0 9999px rgba(10,12,24,.55);transition:all .25s;pointer-events:none}
+.tut-box{position:fixed;max-width:340px;background:var(--paper);border:3px solid var(--ink);box-shadow:4px 4px 0 var(--shadow);padding:10px;display:flex;gap:8px;font-size:14px}
+.tut-box canvas{width:54px;height:54px;image-rendering:pixelated;flex:none;background:var(--paper2);border:2px solid var(--ink)}.tut-box p{margin:4px 0 8px;line-height:1.55}
 .chk{display:flex;gap:8px;align-items:flex-start;font-size:13px;margin:8px 0;cursor:pointer}
 .chk input{margin-top:3px;width:16px;height:16px;flex:none}
 .hint{font-size:11px;color:var(--muted);margin:8px 0;line-height:1.5}
@@ -315,6 +319,8 @@ button.chip.mail{background:#e9f3ff;color:var(--ink);position:relative}
 .wkr i.on{background:var(--green)}.wkr i.fut{background:#eee;border-style:dashed}.wkr i.h{border:0;background:none}
 .dreamcard{font-size:12px;border:2px solid var(--ink);padding:6px 8px;margin:8px 0;background:#f4f0ff}
 .dreamcard .bar{margin:4px 0}
+.fgroup{margin-bottom:10px}.fgroup h3{font-size:13px;margin:0 0 6px;color:var(--muted)}
+.tabs button{padding-left:4px;padding-right:4px}
 .town{position:relative;width:100%;margin-bottom:8px;border:2px solid var(--ink)}.town canvas{width:100%;display:block;image-rendering:pixelated}
 .tplace{position:absolute;transform:translate(0,-2px);background:rgba(255,255,255,.88);border:2px solid var(--ink);font-size:11px;padding:1px 4px;cursor:pointer;display:flex;flex-direction:column;align-items:flex-start;gap:1px;font-family:inherit;max-width:24%}
 .tplace.sel{background:var(--gold)}.tav{display:flex;gap:1px;align-items:center}.tav canvas{width:16px;height:16px;image-rendering:pixelated}.tav small{font-size:10px}
@@ -371,7 +377,9 @@ button.chip.mail{background:#e9f3ff;color:var(--ink);position:relative}
       <div class="tabs" role="tablist">
         <button type="button" role="tab" id="t-habits" aria-selected="true" data-tab="habits">習慣</button>
         <button type="button" role="tab" id="t-res" aria-selected="false" data-tab="res">居民</button>
+        <button type="button" role="tab" id="t-life" aria-selected="false" data-tab="life">生活</button>
         <button type="button" role="tab" id="t-build" aria-selected="false" data-tab="build">佈置</button>
+        <button type="button" role="tab" id="t-set" aria-selected="false" data-tab="set">設定</button>
       </div>
       <div class="tabbody" id="tab-habits" role="tabpanel" aria-labelledby="t-habits">
         <div class="panel">
@@ -382,10 +390,19 @@ button.chip.mail{background:#e9f3ff;color:var(--ink);position:relative}
           <button type="button" class="btn primary block" id="addBtn">＋ 新增習慣（迎接新居民）</button>
         </div>
         <div class="panel" id="taskPanel"></div>
-        <div class="panel"><h2>小屋功能</h2><div class="fbtns">
-          <button type="button" class="btn" data-feat="town">🗺 小鎮地圖</button><button type="button" class="btn" data-feat="postcards">📮 明信片</button><button type="button" class="btn" data-feat="album">📷 相簿</button><button type="button" class="btn" data-feat="ach">🏆 成就</button><button type="button" class="btn" data-feat="report">📊 本週報告</button><button type="button" class="btn" data-feat="stats">📈 統計</button><button type="button" class="btn" data-feat="rating">🏅 小屋評分</button><button type="button" class="btn" data-feat="closet">👕 服裝店</button><button type="button" class="btn" data-feat="garden">🌱 庭院</button><button type="button" class="btn" data-feat="pets">🐾 寵物</button></div></div>
-        <div class="panel" id="partyPanel"></div>
         <div class="panel"><h2>小屋動態</h2><ul class="feed" id="feed"></ul></div>
+      </div>
+      <div class="tabbody" id="tab-res" role="tabpanel" aria-labelledby="t-res" hidden><div class="panel" id="resPanel"></div></div>
+      <div class="tabbody" id="tab-life" role="tabpanel" aria-labelledby="t-life" hidden>
+        <div class="panel"><h2>小屋生活</h2>
+          <div class="fgroup"><h3>📋 習慣紀錄</h3><div class="fbtns"><button type="button" class="btn" data-feat="stats">📈 統計</button><button type="button" class="btn" data-feat="report">📊 本週報告</button></div></div>
+          <div class="fgroup"><h3>💞 居民與回憶</h3><div class="fbtns"><button type="button" class="btn" data-feat="album">📷 相簿</button><button type="button" class="btn" data-feat="postcards">📮 明信片</button><button type="button" class="btn" data-feat="ach">🏆 成就</button></div></div>
+          <div class="fgroup"><h3>🏠 小屋</h3><div class="fbtns"><button type="button" class="btn" data-feat="rating">🏅 小屋評分</button><button type="button" class="btn" data-feat="closet">👕 服裝店</button><button type="button" class="btn" data-feat="garden">🌱 庭院</button><button type="button" class="btn" data-feat="pets">🐾 寵物</button></div></div>
+          <div class="fgroup"><h3>🗺 小鎮</h3><div class="fbtns"><button type="button" class="btn" data-feat="town">🗺 小鎮地圖</button></div></div>
+        </div>
+        <div class="panel" id="partyPanel"></div>
+      </div>
+      <div class="tabbody" id="tab-set" role="tabpanel" aria-labelledby="t-set" hidden>
         <div class="panel" id="idlePanel">
           <h2>掛機與存檔</h2>
           <div class="pace"><span>時間流速</span><div class="seg light" role="group" aria-label="小屋時間流速" id="paceSeg">
@@ -402,8 +419,8 @@ button.chip.mail{background:#e9f3ff;color:var(--ink);position:relative}
           <div class="row"><button type="button" class="btn" id="btnExport">匯出存檔</button><button type="button" class="btn" id="btnImport">匯入存檔</button></div>
           <input type="file" id="fileImport" accept="application/json,.json" hidden>
         </div>
+        <div class="panel"><h2>說明</h2><p class="hint">第一次玩或忘了怎麼操作，可以再看一次教學。</p><button type="button" class="btn" id="tutBtn">再看一次新手教學</button></div>
       </div>
-      <div class="tabbody" id="tab-res" role="tabpanel" aria-labelledby="t-res" hidden><div class="panel" id="resPanel"></div></div>
       <div class="tabbody" id="tab-build" role="tabpanel" aria-labelledby="t-build" hidden><div class="panel" id="buildPanel"></div></div>
     </aside>
   </div>
@@ -479,6 +496,7 @@ button.chip.mail{background:#e9f3ff;color:var(--ink);position:relative}
   </div>
 </div>
 <div class="toast" id="toast" hidden></div>
+<div class="tut" id="tut" hidden><div class="tut-hl" id="tutHl"></div><div class="tut-box" id="tutBox"><canvas id="tutAv" width="36" height="36"></canvas><div><b id="tutTitle"></b><p id="tutText"></p><div class="row"><button type="button" class="btn" id="tutSkip">跳過教學</button><button type="button" class="btn primary" id="tutNext">下一步</button></div></div></div></div>
 <div class="crash" id="crash" hidden role="alertdialog" aria-labelledby="crashT">
   <div class="crash-in">
     <h2 id="crashT">小屋遇到問題</h2>
@@ -3732,7 +3750,7 @@ function initIdleUI(){
    UI
    ========================================================= */
 let curTab='habits',uiPartyT=0;
-function showTab(tab){curTab=tab;for(const k of['habits','res','build']){$('#tab-'+k).hidden=k!==tab;$('#t-'+k).setAttribute('aria-selected',String(k===tab));}
+function showTab(tab){curTab=tab;for(const k of['habits','res','life','build','set']){$('#tab-'+k).hidden=k!==tab;$('#t-'+k).setAttribute('aria-selected',String(k===tab));}
   if(tab==='res')renderRes();if(tab==='build')renderBuild();if(tab!=='build'&&build.on)setBuild(false);if(tab==='build'&&!build.on)setBuild(true);}
 document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>showTab(b.dataset.tab));
 function iconCanvas(cv,name,scale){const c=cv.getContext('2d');cv.width=7*(scale||1);cv.height=7*(scale||1);c.imageSmoothingEnabled=false;c.drawImage(ICONS[name]||GICONS[name],0,0,cv.width,cv.height);return cv;}
@@ -3900,7 +3918,7 @@ function liveUI(){
   if(FEAT.cur==='town'&&!$('#mFeat').hidden&&uiPartyT%8===0)openFeat('town');
   const wxk=weatherNow();$('#clock').textContent=(WEATHER[wxk]?WEATHER[wxk].ic+' ':'')+calStr(gameMin,true);drawSunIco();if(uiPartyT++%10===0)renderParty();
   if(feedDirty){feedDirty=false;const f=$('#feed');f.innerHTML='';if(!feed.length)f.innerHTML='<li class="empty" style="display:block">居民們的生活片段會出現在這裡。</li>';
-    for(const e of feed){const li=el('li');li.append(el('time',null,e.t),el('span',null,e.text));f.append(li);}}
+    for(const e of feed){const li=el('li');li.append(el('time',null,e.t),el('span',null,e.text));if(feedTarget(e.text)){li.classList.add('go');li.title='點一下前往';li.onclick=()=>feedAction(e.text);}f.append(li);}}
   if(EMG)renderAlert();updateVN();
   if(today()!==lastDay){lastDay=today();for(const h of state.habits)chalCheck(h);renderList();weeklyCheck();checkAch();}
 }
@@ -3942,7 +3960,7 @@ function openEmg(){if(!EMG)return;if(EMG.f!==viewFloor)setView(EMG.f);$('#mEmgT'
   body.append(el('p','empty','不處理的話，時間到會自動發生不好的結果。'));openModal('#mEmg');renderAlert();}
 
 /* ---------- toast & modals ---------- */
-let toastT=null;function toast(s,big){if(CATCHING){AWAY.notes.push(s);return;}const t=$('#toast');t.textContent=s;t.className='toast'+(big?' big':'');t.hidden=false;clearTimeout(toastT);toastT=setTimeout(()=>t.hidden=true,big?Math.min(9000,3200+s.length*70):2600);}
+let toastT=null;function toast(s,big){if(CATCHING){AWAY.notes.push(s);return;}const t=$('#toast');t.textContent=s;t.className='toast'+(big?' big':'')+(feedTarget(s)?' go':'');t.onclick=()=>{if(feedTarget(s)){t.hidden=true;feedAction(s);}};t.hidden=false;clearTimeout(toastT);toastT=setTimeout(()=>t.hidden=true,big?Math.min(9000,3200+s.length*70):2600);}
 let confirmCb=null;function confirmDo(msg,cb){$('#confirmMsg').textContent=msg;confirmCb=cb;openModal('#mConfirm');}
 $('#confirmOk').onclick=()=>{closeModal('#mConfirm');if(confirmCb)confirmCb();confirmCb=null;};
 let lastFocus=null;
@@ -4053,6 +4071,32 @@ $('#habitForm').onsubmit=e=>{e.preventDefault();const name=$('#hName').value.tri
     showTab('res');if(r){r.lastGreet=performance.now()/1000;say(r,tone(h,'大家好，我是'+rn+'！我會努力「'+name+'」的，請多指教！'),'happy');}}
   closeModal('#mHabit');saveSoon();};
 
+/* ---------- click-through for feed and toasts ---------- */
+function feedTarget(t){if(/📮/.test(t))return{feat:'postcards'};if(/🎪/.test(t))return{feat:'town'};if(/📬|✉|💌/.test(t))return{inbox:1};if(/🎉|派對|聚會/.test(t))return{tab:'life'};if(/🌱|🥀|庭院/.test(t))return{feat:'garden'};
+  if(/🐾|寵物/.test(t))return{feat:'pets'};if(/🏆|成就/.test(t))return{feat:'ach'};if(/🏗|擴建/.test(t))return{feat:'rating'};if(/🎯|挑戰/.test(t))return{res:1};
+  if(typeof RES!=='undefined'){const r=RES.find(x=>t.includes(x.name));if(r)return{sel:r.id};}if(state&&state.babies){const b=state.babies.find(x=>t.includes(x.name));if(b)return{sel:b.id};}return null;}
+function feedAction(t){const g=feedTarget(t);if(!g)return;if(g.feat)openFeat(g.feat);else if(g.inbox)openInbox();else if(g.tab)showTab(g.tab);else if(g.sel)select(g.sel,true);else if(g.res)showTab('res');}
+/* ---------- first-run tutorial ---------- */
+const TUT=[['#habitList','習慣清單','這裡是你想養成的習慣。每完成一件事就按「打卡」，負責這個習慣的居民就會充滿活力！'],
+  ['#addBtn','新增習慣','想養成新習慣就按這裡，會有一位新居民搬進來。可以設定頻率、目標數量，還有他的外型、國籍和個性。'],
+  ['#stage','你的小屋','點小人可以看他的狀態、跟他聊天。拖曳可以移動畫面，右上角的＋－可以縮放，左邊可以切換樓層。'],
+  ['#inboxBtn','信箱','居民會寫信給你、問你的意見。你的選擇會改變他們的人生喔！'],
+  ['#t-life','生活','這裡有相簿、成就、明信片、小鎮地圖、每週派對……小屋裡發生的大小事都在這。'],
+  ['#buildBtn','佈置模式','擺放、移動、旋轉家具。到「商城」買家具、各國特色家具，還能擴建頂樓和地下室。'],
+  ['#t-set','設定','可以調整時間流速、緊急狀況頻率、打卡提醒，也記得定期匯出存檔。祝你玩得開心！']];
+let tutI=0;
+function tutShow(){const box=$('#tutBox'),hl=$('#tutHl');const[sel,title,text]=TUT[tutI];const tg=$(sel);if(!tg){tutEnd();return;}
+  if(sel==='#t-life'||sel==='#t-set'||sel==='#habitList'||sel==='#addBtn')showTab(sel==='#t-life'?'life':sel==='#t-set'?'set':'habits');
+  tg.scrollIntoView({block:'nearest'});const R=tg.getBoundingClientRect();hl.style.left=(R.left-4)+'px';hl.style.top=(R.top-4)+'px';hl.style.width=(R.width+8)+'px';hl.style.height=(R.height+8)+'px';
+  $('#tutTitle').textContent=title+'（'+(tutI+1)+'/'+TUT.length+'）';$('#tutText').textContent=text;$('#tutNext').textContent=tutI===TUT.length-1?'開始玩！':'下一步';
+  const W=innerWidth,H=innerHeight;const bw=Math.min(340,W-24);box.style.width=bw+'px';let x=R.left,y=R.bottom+12;if(y+170>H)y=Math.max(12,R.top-180);if(R.height>H*.5){y=Math.min(H-190,R.top+20);x=R.left+20;}
+  box.style.left=Math.max(12,Math.min(W-bw-12,x))+'px';box.style.top=Math.max(12,y)+'px';
+  const r=RES[0];if(r){const cv=$('#tutAv');avatar(cv,r.look,false,true,flagsOf(habitById(r.id)));}}
+function tutStart(){tutI=0;$('#tut').hidden=false;tutShow();}
+function tutEnd(){$('#tut').hidden=true;state.tutDone=true;saveSoon();showTab('habits');}
+$('#tutNext').onclick=()=>{tutI++;if(tutI>=TUT.length)tutEnd();else tutShow();};$('#tutSkip').onclick=tutEnd;
+window.addEventListener('resize',()=>{if(!$('#tut').hidden)tutShow();});
+
 /* ---------- inbox & party UI ---------- */
 function renderInboxBadge(){const b=$('#inboxBadge');if(!b||!state)return;const n=pendingCount();b.hidden=!n;b.textContent=n;}
 function openInbox(){renderInbox();openModal('#mInbox');}
@@ -4115,6 +4159,7 @@ function renderShop(){
 }
 $('#shopBtn').onclick=()=>openShop();
 $('#townBtn').onclick=()=>openFeat('town');
+$('#tutBtn').onclick=()=>tutStart();
 
 /* ---------- build panel ---------- */
 function renderBuild(){
@@ -4369,6 +4414,7 @@ function boot(){
   catch(e){showCrash('boot-load',e);state=normalize(exampleState());gameMin=state.clock;CRASH.cloudBlocked=true;}
   guard('boot',()=>{drawLogo();buildWorld();syncResidents();resize();renderList();lastHouseDay=houseDay();lastRelHour=Math.floor(gameMin/60);log('歡迎回到習慣小屋');ensureWeekParty();if(weekday()>=3)rsvpAll();renderParty();renderInboxBadge();rollWeather();if(!state.season){state.season=curSeason();stats().seasonList=[state.season];}weeklyCheck();checkAch();renderTitle();});
   setInterval(()=>guard('notify',notifyCheck),60000);
+  if(!state.tutDone)setTimeout(()=>{if(!state.tutDone&&$('#mHabit').hidden)tutStart();},1800);
   if(!window.claude&&SET.catchup&&state.savedAt){const away=(Date.now()-state.savedAt)/1000;if(away>90&&away<86400*90)queueCatch(away);}
   initIdleUI();
   lastWall=Date.now();requestAnimationFrame(frame);
