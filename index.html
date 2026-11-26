@@ -337,6 +337,10 @@ button.chip.mail{background:#e9f3ff;color:var(--ink);position:relative}
 .fgcv{width:100%;height:44px;image-rendering:pixelated;margin:6px 0}.fgmsg{font-weight:700}.fgres{background:#fff6d6}
 .pantry{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}.ing{border:2px solid var(--ink);background:#fff;padding:2px 8px;font-size:13px}.ing.none{opacity:.45}
 .recipes{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:6px;margin-top:8px}.rcp{border:2px solid var(--ink);background:#f6f6f6;padding:6px;display:flex;flex-direction:column;gap:3px;font-size:12px}.rcp.got{background:#fff}.rcp b{font-size:14px}.rcp small{color:var(--muted)}
+.focusw.brk{background:#eef7ff}.focusw .lopts{flex-wrap:wrap;gap:4px}
+.ftree{display:grid;grid-template-columns:56px 1fr;gap:10px;align-items:center;border:2px solid var(--ink);background:#f3fbe9;padding:8px;margin-bottom:8px}.fte{font-size:44px;line-height:1;text-align:center}.ftree div{display:flex;flex-direction:column;gap:3px}.ftree small{color:var(--muted)}
+.fweek{display:flex;gap:4px;align-items:flex-end;height:60px;margin:8px 0 4px}.fwb{flex:1;height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:2px}.fwb i{width:100%;background:#f0a35e;display:block}.fwb i.ok{background:#7cc26b}.fwb small{font-size:10px;color:var(--muted)}
+.fp.co{box-shadow:inset 0 0 0 2px #7cc26b}.fperfect{font-weight:700;color:#b07a00}.fcom{display:grid;grid-template-columns:56px 1fr;gap:8px;align-items:center}.fcom .fav{width:56px;height:56px;overflow:hidden}.fcom .fav img,.fcom .fav svg{width:100%;height:auto;display:block}
 .fgroup{margin-bottom:10px}.fgroup h3{font-size:13px;margin:0 0 6px;color:var(--muted)}
 .tabs button{padding-left:4px;padding-right:4px}
 .town{position:relative;width:100%;margin-bottom:8px;border:2px solid var(--ink)}.town canvas{width:100%;display:block;image-rendering:pixelated}
@@ -2741,44 +2745,153 @@ function featMood(body,T_){b3State();FEAT.mOff=FEAT.mOff||0;const ym=monthAdd(ym
 
 /* ---------- focus timer ---------- */
 const FOCUS_LINES=['加油！我在旁邊陪你喔。','專心～專心～','我也在努力，我們一起！','再撐一下下就好了！','你好認真，好帥氣！','我幫你顧著，別分心喔～','呼…休息前再衝一下！'];
-let focusIv=null,focusTalk=0;
+const BREAK_TIPS=[['起來伸展一下吧！','fit'],['喝杯水休息一下～','drink'],['看看窗外，讓眼睛休息','window'],['閉上眼睛深呼吸三次','meditate'],['去走動一下，上個廁所也好','toilet']];
+const DISTRACT_LINES={tsun:'哼，才離開一下就回來，算你有良心。',sassy:'又去滑手機？你的專注力跟金魚差不多耶。',gentle:'沒關係，回來就好，我們繼續加油～',passion:'喂！專注！專注！我們還沒結束！',shy:'那、那個…你剛剛不見了，我有點擔心…',lazy:'你也去偷懶啦？…那我也偷懶一下好了。',boss:'給我回來坐好，還沒結束。',clingy:'你跑去哪了啦！不要丟下我一個人～'};
+const SOUNDS={none:'🔇 安靜',rain:'🌧 雨聲',cafe:'☕ 咖啡廳',fire:'🔥 壁爐',forest:'🌲 森林',waves:'🌊 海浪',clock:'🕰 時鐘'};
+const TREE=[[0,'🌰','一顆種子'],[60,'🌱','發芽了'],[180,'🌿','長出葉子'],[420,'🪴','小盆栽'],[900,'🌳','小樹'],[1800,'🌲','大樹'],[3600,'🌸','開花的大樹'],[6000,'🍎','結果的大樹']];
+PLANS.focusw=r=>hasKind('desk',r)?[st('desk',900,{txt:'坐在書桌前陪你專注',prop:'book',bub:'book',eff:{mood:.05},focusw:true})]
+  :hasKind('shelf',r)?[st('shelf',900,{txt:'坐在書櫃前陪你專注',pose:'floor',flip:true,prop:'book',bub:'book',focusw:true})]
+  :hasKind('think',r)?[st('think',900,{txt:'在房間安靜地陪你專注',pose:'floor',prop:'book',bub:'book',focusw:true})]
+  :[st('sofa',900,{txt:'在沙發上陪你專注',prop:'book',bub:'book',focusw:true})];
+let focusIv=null,focusTalk=0,focusHidAt=0;const TITLE0=document.title;
 function focusRes(){return state.focus?RES.find(r=>r.id===state.focus.h):null;}
-function startFocus(hid,min){b3State();state.focus={h:hid,min,end:Date.now()+min*60000,start:Date.now()};saveSoon();focusTalk=Date.now()+20000;
-  const h=habitById(hid);const r=focusRes();if(r){say(r,tone(h,'好！接下來 '+min+' 分鐘我陪你一起專心！'),'happy');}log('🍅 開始專注 '+min+' 分鐘（'+h.res.name+' 陪伴中）');
-  closeModal('#mFeat');focusUI();renderDayPanel();}
-function stopFocus(done){const F=state.focus;if(!F)return;state.focus=null;const h=habitById(F.h);const r=focusRes()||RES.find(x=>x.id===F.h);
-  if(done){const min=F.min;state.focusLog.push({d:today(),m:min,h:F.h});if(state.focusLog.length>800)state.focusLog.splice(0,state.focusLog.length-800);
-    const bonus=Math.max(2,Math.round(min/5));state.coins+=bonus;if(h){h.fav=clamp(h.fav+2,0,100);if(!isChecked(h,today())&&dueToday(h))toggleCheck(h);}
-    if(r&&h){r.celebrate=3;showBub(r,'star',3);say(r,tone(h,'完成了！'+min+' 分鐘的專注，你超棒的！'),'happy');}
-    toast('🍅 專注 '+min+' 分鐘完成！+'+bonus+' 金幣'+(h&&isChecked(h,today())?'・「'+h.name+'」已打卡':''),true);log('🍅 完成 '+min+' 分鐘專注'+(h?'（'+h.res.name+' 一直陪著你）':''));taskHit&&taskHit('focus');}
+function focusIds(F){return[F.h].concat(F.comps||[]).filter(id=>habitById(id));}
+function focusLeft(F){return F.paused?F.left:F.end-Date.now();}
+function focusMain(F){return habitById(F.h);}
+function seatComps(F){for(const id of focusIds(F)){const r=RES.find(x=>x.id===id);if(!r||r.state==='away'||r.state==='stairs'||(r.step&&(r.step.sleep||r.step.focusw||r.step.work)))continue;abortPlan(r);r.forced=true;if(!startPlan(r,'focusw',true))r.forced=false;}}
+function unseat(F){for(const id of focusIds(F)){const r=RES.find(x=>x.id===id);if(r&&r.step&&r.step.focusw){abortPlan(r);r.forced=false;}}}
+function focusNotify(body){try{if('Notification' in window&&Notification.permission==='granted'&&document.hidden)new Notification('習慣小屋',{body,icon:'icons/icon-192.png',tag:'habit-house-focus'});}catch(e){}}
+
+/* ambient sound, generated on the fly (no audio files) */
+const SND={ctx:null,master:null,nodes:[],timers:[],cur:'none'};
+function sndCtx(){if(!SND.ctx){const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return null;SND.ctx=new AC();SND.master=SND.ctx.createGain();SND.master.gain.value=SET.fVol??.5;SND.master.connect(SND.ctx.destination);}
+  if(SND.ctx.state==='suspended')SND.ctx.resume().catch(()=>{});return SND.ctx;}
+function noiseBuf(c,type){const n=c.sampleRate*3;const b=c.createBuffer(1,n,c.sampleRate);const d=b.getChannelData(0);let last=0;for(let i=0;i<n;i++){const w=Math.random()*2-1;if(type==='brown'){last=(last+.02*w)/1.02;d[i]=last*3.5;}else d[i]=w;}return b;}
+function noiseSrc(c,type,filters,vol){const s=c.createBufferSource();s.buffer=noiseBuf(c,type);s.loop=true;let node=s;for(const[t,fr,q]of filters){const bq=c.createBiquadFilter();bq.type=t;bq.frequency.value=fr;if(q)bq.Q.value=q;node.connect(bq);node=bq;}
+  const g=c.createGain();g.gain.value=vol;node.connect(g);g.connect(SND.master);s.start();SND.nodes.push(s,g);return g;}
+function blip(freq,dur,vol,type,sweep){const c=SND.ctx;if(!c)return;const t=c.currentTime;const o=c.createOscillator();const g=c.createGain();o.type=type||'sine';o.frequency.setValueAtTime(freq,t);if(sweep)o.frequency.exponentialRampToValueAtTime(sweep,t+dur);
+  g.gain.setValueAtTime(vol,t);g.gain.exponentialRampToValueAtTime(.0001,t+dur);o.connect(g);g.connect(SND.master);o.start(t);o.stop(t+dur+.05);}
+function crackle(vol,hp){const c=SND.ctx;if(!c)return;const n=Math.floor(c.sampleRate*.03);const b=c.createBuffer(1,n,c.sampleRate);const d=b.getChannelData(0);for(let i=0;i<n;i++)d[i]=(Math.random()*2-1)*(1-i/n);
+  const s=c.createBufferSource();s.buffer=b;const f=c.createBiquadFilter();f.type='highpass';f.frequency.value=hp||1500;const g=c.createGain();g.gain.value=vol;s.connect(f);f.connect(g);g.connect(SND.master);s.start();}
+function sndEvery(a,b,fn){const t={id:0};const go=()=>{t.id=setTimeout(()=>{if(SND.cur==='none')return;try{fn();}catch(e){}go();},rand(a,b));};go();SND.timers.push(t);}
+function sndStop(){for(const n of SND.nodes){try{if(n.stop)n.stop();}catch(e){}try{n.disconnect();}catch(e){}}SND.nodes=[];for(const t of SND.timers)clearTimeout(t.id);SND.timers=[];SND.cur='none';}
+function sndPlay(k){sndStop();if(!k||k==='none')return;const c=sndCtx();if(!c)return;SND.cur=k;
+  if(k==='rain'){noiseSrc(c,'white',[['highpass',500],['lowpass',2600]],.3);noiseSrc(c,'brown',[['lowpass',300]],.3);sndEvery(40,240,()=>crackle(.05+Math.random()*.05,2500));}
+  else if(k==='cafe'){noiseSrc(c,'brown',[['lowpass',600]],.5);noiseSrc(c,'white',[['bandpass',450,.8]],.03);sndEvery(2500,7000,()=>{const f=2300+Math.random()*900;blip(f,.5,.04);setTimeout(()=>blip(f*1.02,.35,.025),90);});}
+  else if(k==='fire'){noiseSrc(c,'brown',[['lowpass',700]],.5);sndEvery(50,420,()=>crackle(.04+Math.random()*.16,1200));}
+  else if(k==='forest'){noiseSrc(c,'white',[['bandpass',700,.5]],.05);noiseSrc(c,'brown',[['lowpass',250]],.15);sndEvery(1500,5500,()=>{const f=2100+Math.random()*1600;blip(f,.12,.05,'sine',f*1.4);setTimeout(()=>blip(f*1.08,.1,.04,'sine',f*1.5),160);if(Math.random()<.5)setTimeout(()=>blip(f*.95,.14,.04,'sine',f*1.3),330);});}
+  else if(k==='waves'){const g=noiseSrc(c,'white',[['lowpass',900]],.2);const lfo=c.createOscillator();lfo.frequency.value=.11;const lg=c.createGain();lg.gain.value=.18;lfo.connect(lg);lg.connect(g.gain);lfo.start();SND.nodes.push(lfo,lg);}
+  else if(k==='clock'){sndEvery(1000,1000,()=>blip(1700,.03,.07,'square'));}}
+function chime(){const c=sndCtx();if(!c)return;[[880,0],[1108,200],[1318,400]].forEach(([f,d])=>setTimeout(()=>blip(f,1.3,.14),d));}
+function setVol(v){SET.fVol=v;saveSettings();if(SND.master)SND.master.gain.value=v;}
+
+/* session flow */
+function startFocus(hid,min,opts){b3State();opts=opts||{};const now=Date.now();
+  const F={h:hid,comps:(opts.comps||[]).filter(id=>id!==hid&&habitById(id)).slice(0,2),task:(opts.task||'').slice(0,40),work:min,brk:opts.brk||5,rounds:Math.max(1,opts.rounds||1),round:1,phase:'work',
+    end:now+min*60000,start:now,dist:0,pdist:0,awayMs:0,doneMin:0,coins:0,sound:opts.sound||SET.fSound||'none',strict:!!(opts.strict??SET.fStrict)};
+  state.focus=F;saveSoon();focusTalk=now+20000;seatComps(F);sndPlay(F.sound);
+  const h=habitById(hid);const r=focusRes();if(r)say(r,tone(h,(F.task?'『'+F.task+'』對吧？':'')+'好！接下來 '+min+' 分鐘我陪你一起專心！'),'happy');
+  for(const id of F.comps){const o=RES.find(x=>x.id===id);const oh=habitById(id);if(o&&oh)setTimeout(()=>{if(state.focus)o.say={text:tone(oh,'我也來！一起加油～'),until:performance.now()/1000+4};},1800);}
+  log('🍅 開始專注 '+min+' 分鐘'+(F.rounds>1?'×'+F.rounds+' 輪':'')+'（'+focusIds(F).map(nameOf).join('、')+' 陪伴中）');
+  closeModal('#mFeat');focusUI(true);renderDayPanel();}
+function phaseEnd(){const F=state.focus;if(!F)return;const h=focusMain(F);const r=focusRes();
+  if(F.phase==='work'){const min=F.work;F.doneMin+=min;const perfect=F.strict&&!F.pdist;let gain=Math.max(2,Math.round(min/5));if(perfect)gain=Math.round(gain*1.5);F.coins+=gain;state.coins+=gain;
+    state.focusLog.push({d:today(),m:min,h:F.h,sid:F.start,task:F.task,dist:F.pdist,perfect});if(state.focusLog.length>800)state.focusLog.splice(0,state.focusLog.length-800);
+    for(const id of focusIds(F)){const oh=habitById(id);if(!oh)continue;oh.fav=clamp(oh.fav+2,0,100);oh.focusMin=(oh.focusMin||0)+min;const o=RES.find(x=>x.id===id);if(o){skillAct(o,'desk');o.needs.mood=clamp(o.needs.mood+5,0,100);}
+      if(oh.focusMin>=300&&!oh.studyBuddy){oh.studyBuddy=1;lifeLog(id,'📚','和你一起專注超過 300 分鐘，成為「讀書夥伴」');log('📚 '+oh.res.name+' 成為你的讀書夥伴了！');}}
+    if(F.round===1&&h&&!isChecked(h,today())&&dueToday(h))toggleCheck(h);
+    goalCheck();treeCheck();chime();taskHit('focus');
+    if(F.round<F.rounds){F.phase='break';const brk=F.round%4===0?Math.max(15,F.brk*3):F.brk;F.end=Date.now()+brk*60000;F.pdist=0;focusHidAt=0;unseat(F);
+      const tip=choice(BREAK_TIPS);if(r&&h){say(r,tone(h,'第 '+F.round+' 輪完成！'+tip[0]),'happy');abortPlan(r);r.forced=true;if(!startPlan(r,tip[1],true))r.forced=false;}
+      toast('☕ 第 '+F.round+' 輪完成（+'+gain+' 金幣'+(perfect?'・完美專注 ×1.5':'')+'）。休息 '+brk+' 分鐘：'+tip[0],true);focusNotify('第 '+F.round+' 輪完成，休息 '+brk+' 分鐘吧！');}
+    else{focusNotify('專注完成！一共 '+F.doneMin+' 分鐘，辛苦了！');finishFocus(true);return;}}
+  else{F.round++;F.phase='work';F.end=Date.now()+F.work*60000;F.pdist=0;seatComps(F);chime();
+    if(r&&h)say(r,tone(h,'休息結束～第 '+F.round+' 輪開始，衝吧！'),'happy');toast('🍅 第 '+F.round+' / '+F.rounds+' 輪開始');focusNotify('休息結束，第 '+F.round+' 輪開始！');}
+  saveSoon();focusUI(true);renderDayPanel();renderTop();}
+function finishFocus(done){const F=state.focus;if(!F)return;state.focus=null;unseat(F);sndStop();document.title=TITLE0;focusHidAt=0;
+  const h=focusMain(F);const r=RES.find(x=>x.id===F.h);
+  if(F.doneMin>0){FEAT.lastFocus=Object.assign({},F,{finished:done});if(r&&h)say(r,tone(h,done?'完成了！'+F.doneMin+' 分鐘的專注，你超棒的！':'今天先到這裡，也專注了 '+F.doneMin+' 分鐘喔！'),'happy');
+    log('🍅 完成專注，共 '+F.doneMin+' 分鐘'+(F.strict?'・分心 '+F.dist+' 次':'')+(h?'（'+focusIds(F).map(nameOf).join('、')+' 一直陪著你）':''));openFeat('focusEnd');}
   else{toast('已結束專注計時');if(r&&h)say(r,tone(h,'沒關係，下次再一起努力！'),null);}
   saveSoon();focusUI();renderDayPanel();renderTop();}
-function focusTick(){const F=state.focus;if(!F){focusUI();return;}const left=F.end-Date.now();if(left<=0){stopFocus(true);return;}
-  const w=$('#focusW');if(!w||w.hidden)focusUI();const tm=$('#focusTm');if(tm){const s=Math.ceil(left/1000);tm.textContent=String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');}
-  const pr=$('#focusPr');if(pr)pr.style.width=(100-left/(F.min*60000)*100)+'%';
-  if(Date.now()>focusTalk){focusTalk=Date.now()+60000+Math.random()*60000;const r=focusRes();const h=habitById(F.h);if(r&&h&&!document.hidden){r.say={text:tone(h,choice(FOCUS_LINES)),until:performance.now()/1000+5};showBub(r,'heart',2);const q=$('#focusSay');if(q)q.textContent=r.say.text;}}}
-function focusUI(){let w=$('#focusW');const F=state.focus;if(!F){if(w)w.hidden=true;return;}const h=habitById(F.h);if(!h){state.focus=null;if(w)w.hidden=true;return;}
+function stopFocus(done){const F=state.focus;if(!F)return;if(done){F.end=Date.now();F.rounds=F.round;phaseEnd();}else finishFocus(false);}
+function pauseFocus(){const F=state.focus;if(!F)return;const r=focusRes();const h=focusMain(F);
+  if(F.paused){F.paused=false;F.end=Date.now()+F.left;if(F.phase==='work')seatComps(F);sndPlay(F.sound);if(r&&h)r.say={text:tone(h,'好，繼續！'),until:performance.now()/1000+3};}
+  else{F.paused=true;F.left=F.end-Date.now();sndStop();focusHidAt=0;if(r&&h)r.say={text:tone(h,'先暫停一下，我等你喔～'),until:performance.now()/1000+4};}
+  saveSoon();focusUI(true);}
+function goalCheck(){const goal=SET.fGoal||50;const t=today();const m=state.focusLog.filter(f=>f.d===t).reduce((a,f)=>a+f.m,0);if(m>=goal&&state.fGoalDay!==t){state.fGoalDay=t;state.coins+=15;setTimeout(()=>toast('🎯 今日專注目標 '+goal+' 分鐘達成！+15 金幣',true),2600);log('🎯 達成今日專注目標 '+goal+' 分鐘');}}
+function treeStage(m){let s=0;for(let i=0;i<TREE.length;i++)if(m>=TREE[i][0])s=i;return s;}
+function focusTotal(){return state.focusLog.reduce((a,f)=>a+f.m,0);}
+function treeCheck(){const s=treeStage(focusTotal());if((state.treeSt||0)<s){state.treeSt=s;const T0=TREE[s];const c=20*s;state.coins+=c;setTimeout(()=>toast('🌳 專注之樹長大了：'+T0[1]+' '+T0[2]+'！+'+c+' 金幣',true),5200);log('🌳 專注之樹長成了「'+T0[2]+'」');}}
+function onFocusVis(){const F=state.focus;if(!F||!F.strict||F.phase!=='work'||F.paused)return;
+  if(document.hidden){focusHidAt=Date.now();return;}if(!focusHidAt)return;const away=Date.now()-focusHidAt;focusHidAt=0;if(away<12000||Date.now()>F.end)return;
+  F.dist++;F.pdist++;F.awayMs+=away;saveSoon();const r=focusRes();const h=focusMain(F);
+  if(r&&h){const P=persOf(h);const k=P.keys?P.keys.find(x=>DISTRACT_LINES[x]):null;const line=(k&&DISTRACT_LINES[k])||choice(['你剛剛是不是偷偷滑手機了？','嗯？你剛剛跑去哪了？我一直在等你喔。','回來啦～我們繼續吧！']);r.say={text:tone(h,line),until:performance.now()/1000+6};showBub(r,'q',3);const q=$('#focusSay');if(q)q.textContent='「'+r.say.text+'」';}
+  toast('👀 分心了 '+Math.round(away/1000)+' 秒（第 '+F.dist+' 次）');focusUI(true);}
+function focusTick(){const F=state.focus;if(!F){focusUI();return;}const left=focusLeft(F);if(!F.paused&&left<=0){phaseEnd();return;}
+  const w=$('#focusW');if(!w||w.hidden)focusUI(true);const s=Math.max(0,Math.ceil(left/1000));const ts=String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');
+  const tm=$('#focusTm');if(tm)tm.textContent=ts;document.title=(F.paused?'💤 ':F.phase==='work'?'🍅 ':'☕ ')+ts+'・習慣小屋';
+  const total=(F.phase==='work'?F.work:(F.round%4===0?Math.max(15,F.brk*3):F.brk))*60000;const pr=$('#focusPr');if(pr)pr.style.width=Math.min(100,100-left/total*100)+'%';
+  if(F.paused||F.phase!=='work')return;
+  if(Date.now()>focusTalk){focusTalk=Date.now()+60000+Math.random()*60000;const ids=focusIds(F);const id=choice(ids);const r=RES.find(x=>x.id===id);const h=habitById(id);
+    if(r&&h&&!document.hidden){const L=FOCUS_LINES.concat(F.task?['『'+F.task+'』進行得怎麼樣？','想到『'+F.task+'』做完的樣子，就好有動力！']:[]);r.say={text:tone(h,choice(L)),until:performance.now()/1000+5};showBub(r,'heart',2);const q=$('#focusSay');if(q)q.textContent='「'+r.say.text+'」';}
+    if(Math.random()<.5)seatComps(F);}}
+function focusUI(force){let w=$('#focusW');const F=state.focus;if(!F){if(w)w.hidden=true;document.title=TITLE0;return;}const h=focusMain(F);if(!h){state.focus=null;if(w)w.hidden=true;return;}
   if(!w){w=el('div','focusw');w.id='focusW';document.body.append(w);}
-  if(w.dataset.k!==F.h+'|'+F.start){w.dataset.k=F.h+'|'+F.start;w.innerHTML='';const av=el('div','fav');renderPortrait(av,h,'happy');
-    const info=el('div','fi');info.append(el('b',null,'🍅 專注中・'+h.name),el('span','ftm','--:--'),el('em',null,h.res.name+' 陪你一起'));info.querySelector('.ftm').id='focusTm';
-    const q=el('small','fsay','「'+tone(h,'一起加油吧！')+'」');q.id='focusSay';const bar=el('div','prog');const i=el('i');i.id='focusPr';bar.append(i);
-    const x=el('button','btn sm','結束');x.type='button';x.onclick=()=>confirmDo('現在結束的話不會自動打卡，確定要結束嗎？',()=>stopFocus(false));
-    const loc=el('button','btn sm','看看他');loc.type='button';loc.onclick=()=>select(F.h,true);
-    w.append(av,info,q,bar,el('div','lopts',''));w.lastChild.append(loc,x);}
+  w.hidden=false;const key=F.h+'|'+F.start+'|'+F.phase+'|'+F.round+'|'+!!F.paused+'|'+F.dist+'|'+F.sound;
+  if(force||w.dataset.k!==key){w.dataset.k=key;w.innerHTML='';w.classList.toggle('brk',F.phase==='break');const av=el('div','fav');renderPortrait(av,h,F.phase==='work'?'happy':'neutral');
+    const info=el('div','fi');info.append(el('b',null,(F.paused?'💤 暫停中':F.phase==='work'?'🍅 專注中':'☕ 休息中')+(F.rounds>1?'・第 '+F.round+'/'+F.rounds+' 輪':'')),el('span','ftm','--:--'),
+      el('em',null,(F.task?'『'+F.task+'』・':'')+focusIds(F).map(id=>{const o=RES.find(x=>x.id===id);return nameOf(id)+(o&&o.step&&o.step.sleep?'（睡著了，在夢裡陪你）':o&&o.state==='away'?'（外出中）':'');}).join('、')+' 陪你'+(F.strict?'・分心 '+F.dist+' 次':'')));info.querySelector('.ftm').id='focusTm';
+    const q=el('small','fsay','「'+tone(h,F.phase==='work'?'一起加油吧！':'休息一下，等等繼續～')+'」');q.id='focusSay';const bar=el('div','prog');const i=el('i');i.id='focusPr';bar.append(i);
+    const row=el('div','lopts');const mk=(t,f,lab)=>{const b=el('button','btn sm',t);b.type='button';if(lab)b.setAttribute('aria-label',lab);b.onclick=f;row.append(b);};
+    mk(F.paused?'繼續':'暫停',pauseFocus);
+    mk(SOUNDS[F.sound]||'🔇 安靜',()=>{const ks=Object.keys(SOUNDS);F.sound=ks[(ks.indexOf(F.sound)+1)%ks.length];SET.fSound=F.sound;saveSettings();if(!F.paused)sndPlay(F.sound);saveSoon();toast('背景音：'+SOUNDS[F.sound]);focusUI(true);},'切換背景音');
+    if(F.phase==='break')mk('跳過休息',()=>{F.end=Date.now();phaseEnd();});
+    mk('看看他',()=>select(F.h,true));
+    mk('結束',()=>confirmDo(F.doneMin?'現在結束，這次已完成 '+F.doneMin+' 分鐘會保留。確定嗎？':'現在結束的話不會自動打卡，確定要結束嗎？',()=>stopFocus(false)));
+    w.append(av,info,q,bar,row);focusTick();}
   w.hidden=false;}
+function weekBars(){const t=today();const wrap=el('div','fweek');const days=[];for(let i=6;i>=0;i--)days.push(addDays(t,-i));const vals=days.map(d=>state.focusLog.filter(f=>f.d===d).reduce((a,f)=>a+f.m,0));const mx=Math.max(SET.fGoal||50,...vals);
+  days.forEach((d,i)=>{const c=el('div','fwb');const b=el('i',vals[i]>=(SET.fGoal||50)?'ok':'');b.style.height=Math.max(3,vals[i]/mx*100)+'%';b.title=d.slice(5)+' '+vals[i]+' 分鐘';c.append(b,el('small',null,'日一二三四五六'[new Date(d+'T00:00').getDay()]));wrap.append(c);});return wrap;}
 function featFocus(body,T_){b3State();T_.textContent='🍅 專注計時';
-  if(state.focus){const h=habitById(state.focus.h);body.append(el('p',null,'正在和 '+h.res.name+' 一起專注「'+h.name+'」，剩下 '+Math.ceil((state.focus.end-Date.now())/60000)+' 分鐘。'));
-    const b=el('button','btn','結束專注');b.type='button';b.onclick=()=>{closeModal('#mFeat');stopFocus(false);};body.append(b);return;}
-  body.append(el('p','hint','選一位居民陪你專心做一件事。時間到會自動幫那個習慣打卡，還會拿到金幣。計時用的是真實時間，關掉頁面再打開也會繼續算。'));
-  FEAT.fH=habitById(FEAT.fH)?FEAT.fH:(state.habits.find(h=>!isChecked(h,today())&&dueToday(h))||state.habits[0]||{}).id;FEAT.fM=FEAT.fM||25;
+  if(state.focus){const F=state.focus;const h=focusMain(F);body.append(el('p',null,(F.phase==='work'?'正在和 '+focusIds(F).map(nameOf).join('、')+' 一起專注':'休息中')+(F.task?'『'+F.task+'』':'')+'，剩下 '+Math.ceil(focusLeft(F)/60000)+' 分鐘'+(F.rounds>1?'（第 '+F.round+'/'+F.rounds+' 輪）':'')+'。'));
+    const row=el('div','lopts');const b1=el('button','btn',F.paused?'繼續':'暫停');b1.type='button';b1.onclick=()=>{pauseFocus();openFeat('focus');};const b=el('button','btn','結束專注');b.type='button';b.onclick=()=>{closeModal('#mFeat');stopFocus(false);};row.append(b1,b);body.append(row);return;}
   if(!state.habits.length){body.append(el('p','empty','先新增一個習慣吧！'));return;}
-  const g=el('div','fpick');for(const h of state.habits){const b=el('button','fp'+(FEAT.fH===h.id?' on':''));b.type='button';const av=el('div','fav');renderPortrait(av,h,'neutral');
-    b.append(av,el('b',null,h.res.name),el('span',null,h.name+(isChecked(h,today())?' ✓':'')));b.onclick=()=>{FEAT.fH=h.id;openFeat('focus');};g.append(b);}body.append(g);
-  const mr=el('div','lopts');for(const m of FOCUS_MIN){const b=el('button','btn sm'+(FEAT.fM===m?' primary':''),m+' 分鐘');b.type='button';b.onclick=()=>{FEAT.fM=m;openFeat('focus');};mr.append(b);}body.append(mr);
-  const go=el('button','btn primary block','開始專注');go.type='button';go.onclick=()=>startFocus(FEAT.fH,FEAT.fM);body.append(go);
-  const td=state.focusLog.filter(f=>f.d===today());const wk=state.focusLog.filter(f=>f.d>=addDays(today(),-6));
-  body.append(el('p','hint','今天專注 '+td.reduce((a,f)=>a+f.m,0)+' 分鐘（'+td.length+' 次）・近 7 天 '+wk.reduce((a,f)=>a+f.m,0)+' 分鐘・累計 '+state.focusLog.reduce((a,f)=>a+f.m,0)+' 分鐘'));}
-
+  /* growth: tree + goal + week */
+  const tot=focusTotal(),si=treeStage(tot),T0=TREE[si],T1=TREE[si+1];const tc=el('div','ftree');tc.append(el('span','fte',T0[1]));const tx=el('div');tx.append(el('b',null,'專注之樹：'+T0[2]),el('small',null,'累計專注 '+tot+' 分鐘'+(T1?'，再 '+(T1[0]-tot)+' 分鐘長成「'+T1[2]+'」':'，已經長到最大了！')));
+  if(T1){const bar=el('div','bar');const i=el('i');i.style.width=Math.round((tot-T0[0])/(T1[0]-T0[0])*100)+'%';bar.append(i);tx.append(bar);}tc.append(tx);body.append(tc);
+  const goal=SET.fGoal||50;const tdm=state.focusLog.filter(f=>f.d===today()).reduce((a,f)=>a+f.m,0);const gc=el('div','stat');const gh=el('b',null,'今日目標 '+tdm+' / '+goal+' 分鐘'+(tdm>=goal?' 🎯':''));gc.append(gh);
+  const gb=el('div','bar');const gi=el('i');gi.style.width=Math.min(100,tdm/goal*100)+'%';gb.append(gi);gc.append(gb,weekBars());
+  const gr=el('div','lopts');gr.append(el('small',null,'每日目標：'));for(const g of[25,50,100,150]){const b=el('button','btn sm'+(goal===g?' primary':''),g+' 分');b.type='button';b.onclick=()=>{SET.fGoal=g;saveSettings();openFeat('focus');};gr.append(b);}gc.append(gr);body.append(gc);
+  /* setup */
+  FEAT.fH=habitById(FEAT.fH)?FEAT.fH:(state.habits.find(h=>!isChecked(h,today())&&dueToday(h))||state.habits[0]).id;FEAT.fM=FEAT.fM||25;FEAT.fR=FEAT.fR||1;FEAT.fB=FEAT.fB||5;FEAT.fC=(FEAT.fC||[]).filter(id=>id!==FEAT.fH&&habitById(id));
+  const ti=document.createElement('input');ti.className='t';ti.maxLength=40;ti.placeholder='這次要做什麼？（例如：寫完報告第二章）';ti.value=FEAT.fT||'';ti.setAttribute('aria-label','這次要專注做的事');ti.oninput=()=>{FEAT.fT=ti.value;};body.append(el('label','f','🎯 這次的目標'),ti);
+  body.append(el('label','f','🙋 主要陪伴（時間到會幫他的習慣打卡）'));const g=el('div','fpick');for(const h of state.habits){const b=el('button','fp'+(FEAT.fH===h.id?' on':'')+(FEAT.fC.includes(h.id)?' co':''));b.type='button';const av=el('div','fav');renderPortrait(av,h,'neutral');
+    b.append(av,el('b',null,h.res.name+(h.studyBuddy?' 📚':'')),el('span',null,h.name+(isChecked(h,today())?' ✓':'')));b.onclick=()=>{FEAT.fH=h.id;openFeat('focus');};g.append(b);}body.append(g);
+  if(state.habits.length>1){body.append(el('label','f','👥 再找夥伴一起自習（最多 2 位，大家都會累積學識和好感）'));const cr=el('div','lopts');for(const h of state.habits){if(h.id===FEAT.fH)continue;const on=FEAT.fC.includes(h.id);const b=el('button','btn sm'+(on?' primary':''),(on?'✓ ':'')+h.res.name);b.type='button';
+      b.onclick=()=>{FEAT.fC=on?FEAT.fC.filter(x=>x!==h.id):FEAT.fC.concat([h.id]).slice(-2);openFeat('focus');};cr.append(b);}body.append(cr);}
+  const opt=(label,vals,cur,fmt,set)=>{const r=el('div','lopts');r.append(el('small',null,label));for(const v of vals){const b=el('button','btn sm'+(cur===v?' primary':''),fmt(v));b.type='button';b.onclick=()=>{set(v);openFeat('focus');};r.append(b);}body.append(r);};
+  body.append(el('label','f','⏱ 時間'));opt('專注',FOCUS_MIN,FEAT.fM,v=>v+' 分',v=>FEAT.fM=v);opt('輪數',[1,2,3,4],FEAT.fR,v=>v===1?'單次':v+' 輪',v=>FEAT.fR=v);if(FEAT.fR>1)opt('休息',[5,10],FEAT.fB,v=>v+' 分',v=>FEAT.fB=v);
+  if(FEAT.fR>1)body.append(el('small','hint','番茄鐘循環：專注 '+FEAT.fM+' 分 → 休息 '+FEAT.fB+' 分，共 '+FEAT.fR+' 輪（每 4 輪會有一次長休息）。休息時居民會提醒你伸展、喝水。'));
+  body.append(el('label','f','🎧 背景音（現場合成，不用網路）'));const sr=el('div','lopts');const cur=SET.fSound||'none';for(const k in SOUNDS){const b=el('button','btn sm'+(cur===k?' primary':''),SOUNDS[k]);b.type='button';
+    b.onclick=()=>{SET.fSound=k;saveSettings();sndPlay(k);if(k!=='none')setTimeout(()=>{if(!state.focus&&SND.cur===k)sndStop();},4000);openFeat('focus');};sr.append(b);}body.append(sr);
+  const vr=el('div','lopts');vr.append(el('small',null,'音量'));const vs=document.createElement('input');vs.type='range';vs.min='0';vs.max='1';vs.step='0.05';vs.value=String(SET.fVol??.5);vs.setAttribute('aria-label','背景音音量');vs.oninput=()=>setVol(+vs.value);vr.append(vs);body.append(vr);
+  const sl=el('label','aiopt');const sc=document.createElement('input');sc.type='checkbox';sc.checked=!!SET.fStrict;sc.onchange=()=>{SET.fStrict=sc.checked;saveSettings();};sl.append(sc,document.createTextNode('🔒 防分心模式：專注時切換到別的 App 或分頁就算分心，居民會發現喔。零分心完成可拿 1.5 倍金幣'));body.append(sl);
+  const go=el('button','btn primary block','開始專注');go.type='button';go.onclick=()=>startFocus(FEAT.fH,FEAT.fM,{comps:FEAT.fC,task:(FEAT.fT||'').trim(),rounds:FEAT.fR,brk:FEAT.fB,sound:SET.fSound,strict:SET.fStrict});body.append(go);
+  /* history */
+  const ses={};for(const f of state.focusLog){if(!f.sid)continue;const s=ses[f.sid]||(ses[f.sid]={d:f.d,m:0,task:f.task,h:f.h,rate:f.rate,note:f.note,n:0,dist:0});s.m+=f.m;s.n++;s.dist+=f.dist||0;if(f.rate!=null)s.rate=f.rate;if(f.note)s.note=f.note;}
+  const list=Object.values(ses).slice(-5).reverse();if(list.length){const hs=el('div','stat');hs.append(el('b',null,'最近的專注'));for(const s of list)hs.append(el('span',null,s.d.slice(5).replace('-','/')+'　'+s.m+' 分鐘'+(s.n>1?'（'+s.n+' 輪）':'')+(s.task?'・'+s.task:'')+(s.rate!=null?' '+FOCUS_RATE[s.rate][0]:'')+(s.note?'・'+s.note:'')+'・'+nameOf(s.h)+' 陪伴'));body.append(hs);}}
+const FOCUS_RATE=[['😄','超專心'],['🙂','還不錯'],['😣','很難專心']];
+function featFocusEnd(body,T_){const F=FEAT.lastFocus;if(!F){T_.textContent='專注紀錄';return;}const h=habitById(F.h);T_.textContent=F.finished?'🍅 專注完成！':'🍅 專注結束';
+  const kp=el('div','kpis');const kpi=(v,n)=>{const d=el('div','kpi');d.append(el('b',null,v),el('span',null,n));kp.append(d);};kpi(F.doneMin,'專注分鐘');kpi(Math.round(F.doneMin/F.work)+(F.rounds>1?' / '+F.rounds:''),'完成輪數');kpi(F.strict?F.dist:'—','分心次數');kpi('+'+F.coins,'金幣');body.append(kp);
+  if(F.strict&&!F.dist)body.append(el('p','fperfect','✨ 完美專注！整段時間都沒有分心，金幣 ×1.5'));
+  if(h){const c=el('div','plot fcom');const av=el('div','fav');renderPortrait(av,h,'happy');const line=F.strict&&F.dist>=3?'中間好像分心了好幾次…下次我會盯緊你的！':F.doneMin>=90?'哇，今天也太認真了吧！我都有點累了…不過好開心！':F.task?'『'+F.task+'』有進度嗎？我覺得你一定可以！':'跟你一起專注的時間，我很喜歡喔。';
+    c.append(av,el('span',null,h.res.name+'：「'+tone(h,line)+'」'));body.append(c);}
+  const tot=focusTotal(),si=treeStage(tot);body.append(el('p','hint','專注之樹：'+TREE[si][1]+' '+TREE[si][2]+'（累計 '+tot+' 分鐘）・今天專注 '+state.focusLog.filter(f=>f.d===today()).reduce((a,f)=>a+f.m,0)+' / '+(SET.fGoal||50)+' 分鐘'));
+  const mine=state.focusLog.filter(f=>f.sid===F.start);const curR=mine.length&&mine[mine.length-1].rate;
+  body.append(el('label','f','這次感覺如何？'));const rr=el('div','moods');FOCUS_RATE.forEach(([e,n],i)=>{const b=el('button','mood'+(curR===i?' on':''),e);b.type='button';b.title=n;b.setAttribute('aria-label',n);b.onclick=()=>{for(const f of mine)f.rate=i;saveSoon();openFeat('focusEnd');};rr.append(b);});body.append(rr);
+  const ni=document.createElement('input');ni.className='t';ni.maxLength=60;ni.placeholder='完成了什麼？（選填）';ni.value=(mine.find(f=>f.note)||{}).note||'';ni.setAttribute('aria-label','這次完成了什麼');ni.onchange=()=>{for(const f of mine)f.note=ni.value.trim();saveSoon();};body.append(ni);
+  const again=el('button','btn primary block','再來一輪');again.type='button';again.onclick=()=>startFocus(F.h,F.work,{comps:F.comps,task:F.task,rounds:1,sound:F.sound,strict:F.strict});body.append(again);}
 /* ---------- monthly / yearly review ---------- */
 function featReview(body,T_){b3State();FEAT.rv=FEAT.rv||{mode:'month',off:-0};const R=FEAT.rv;const t=today();
   const tabs=el('div','lopts');for(const[k,n]of[['month','月回顧'],['year','年回顧']]){const b=el('button','btn sm'+(R.mode===k?' primary':''),n);b.type='button';b.onclick=()=>{R.mode=k;R.off=0;openFeat('review');};tabs.append(b);}
@@ -2809,8 +2922,8 @@ function featReview(body,T_){b3State();FEAT.rv=FEAT.rv||{mode:'month',off:-0};co
 function reviewCheck(){b3State();const t=today();const ym=ymOf(t);if(!state.revSeen){state.revSeen=ym;return;}if(state.revSeen===ym)return;
   const prev=state.revSeen;state.revSeen=ym;const yearTurn=prev.slice(0,4)!==ym.slice(0,4);const S=rangeStats(monthDays(prev));saveSoon();if(!S.tot)return;
   FEAT.rv={mode:yearTurn?'year':'month',off:yearTurn?-1:-1};const msg=yearTurn?'🗓 '+prev.slice(0,4)+' 年的年度回顧出爐了！點我看看這一年':'🗓 '+ymLabel(prev)+'的回顧出爐了：完成率 '+S.rate+'%，點我看看';log(msg);setTimeout(()=>toast(msg,true),2500);}
-const FEATX={focus:featFocus,mood:featMood,review:featReview,hall:featHall};
-function b3Init(){b3State();renderDayPanel();focusUI();if(focusIv)clearInterval(focusIv);focusIv=setInterval(()=>guard('focus',focusTick),1000);reviewCheck();setInterval(()=>guard('review',reviewCheck),60000);}
+const FEATX={focus:featFocus,focusEnd:featFocusEnd,mood:featMood,review:featReview,hall:featHall};
+function b3Init(){b3State();renderDayPanel();focusUI();if(focusIv)clearInterval(focusIv);focusIv=setInterval(()=>guard('focus',focusTick),1000);document.addEventListener('visibilitychange',()=>guard('focusVis',onFocusVis));document.addEventListener('pointerdown',()=>{const F=state.focus;if(F&&!F.paused&&F.sound&&F.sound!=='none'&&SND.cur==='none')sndPlay(F.sound);},{passive:true});if(state.focus&&state.focus.phase==='work'&&!state.focus.paused)setTimeout(()=>guard('seat',()=>state.focus&&seatComps(state.focus)),1500);reviewCheck();setInterval(()=>guard('review',reviewCheck),60000);}
 
 /* =========================================================
    Residents: skills, personality drift, dreams, overheard talk, graduation
@@ -2885,7 +2998,7 @@ const TALK={
 let talkNext=0;
 function talkKind(a,b){const rel=relGet(a.id,b.id);if(rel.stage>=4)return'couple';if(rel.ex==='bitter'||rel.aff<20)return'rival';if(rel.aff>=55)return'friend';return'plain';}
 function talkFree(r){return r.state!=='away'&&r.state!=='stairs'&&!(r.step&&(r.step.sleep||r.step.work||r.step.mope))&&!(r.say&&r.say.until>performance.now()/1000)&&!r.forced;}
-function overhearTick(){if(CATCHING||document.hidden||!RES||RES.length<2)return;const now=Date.now();if(now<talkNext)return;talkNext=now+rand(16000,32000);
+function overhearTick(){if(state.focus&&state.focus.phase==='work')return;if(CATCHING||document.hidden||!RES||RES.length<2)return;const now=Date.now();if(now<talkNext)return;talkNext=now+rand(16000,32000);
   const vis=RES.filter(r=>r.f===viewFloor&&talkFree(r));const pairs=[];
   for(let i=0;i<vis.length;i++)for(let j=i+1;j<vis.length;j++){const a=vis[i],b=vis[j];const near=Math.hypot(a.px-b.px,a.py-b.py)<3.4*T||(a.step&&a.step.with===b.id);if(near)pairs.push([a,b]);}
   if(!pairs.length)return;let[a,b]=choice(pairs);if(Math.random()<.5)[a,b]=[b,a];const ha=habitById(a.id),hb=habitById(b.id);if(!ha||!hb)return;
@@ -3936,7 +4049,7 @@ let CATCHING=false;const CATCH={rem:0,total:0};const AWAY={sec:0,notes:[],startM
 let lastWall=Date.now(),hiddenAt=0,lastRender=0,lastFrameT=0;
 let EMG_NEXT=rand(150,300);
 function simStep(dt){
-  if(!CATCHING&&!document.hidden&&!EMG&&CATCH.rem<=0&&(SET.emg??1)>0){EMG_NEXT-=dt;if(EMG_NEXT<=0){EMG_NEXT=rand(600,1200)/(SET.emg||1);guard('emergency',emergencyTick);}}
+  if(!CATCHING&&!document.hidden&&!EMG&&CATCH.rem<=0&&(SET.emg??1)>0&&!(state&&state.focus&&state.focus.phase==='work')){EMG_NEXT-=dt;if(EMG_NEXT<=0){EMG_NEXT=rand(600,1200)/(SET.emg||1);guard('emergency',emergencyTick);}}
   const dtG=dt*paceRate()*speed;gameMin+=dtG;
   for(const r of RES){if(!guard('resident',()=>updateResident(r,dt,dtG))){r.plan=[];r.step=null;r.state='idle';r.spot=null;r.path=[];r.wait=3;r.goF=null;}}
   for(const b of BABIES)guard('baby',()=>updateBaby(b,dt,dtG));
